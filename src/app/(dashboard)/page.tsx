@@ -1,9 +1,8 @@
 import { auth } from "@/auth";
+import { ExpenseChart } from "@/components/expense-chart";
+import { NoSSR } from "@/components/no-ssr";
 import { aggregateExpensesByMonth, projectExpenses } from "@/lib/calculations";
 import { getCachedPeople, getCachedSensitiveData, getCachedTransactions } from "@/lib/data";
-import dynamic from "next/dynamic";
-
-const ExpenseChart = dynamic(() => import("@/components/expense-chart").then((m) => m.ExpenseChart), { ssr: false });
 
 export default async function OverviewPage() {
   const session = await auth();
@@ -52,7 +51,7 @@ export default async function OverviewPage() {
           </div>
         ))}
       </div>
-      <ExpenseChart historical={monthlyExpenses} projections={projections} />
+      <NoSSR><ExpenseChart historical={monthlyExpenses} projections={projections} /></NoSSR>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
         <h2 className="mb-4 text-lg font-semibold">Active Team Breakdown</h2>

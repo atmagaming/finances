@@ -1,9 +1,6 @@
-import dynamic from "next/dynamic";
-
-const RevenueChart = dynamic(() => import("@/components/revenue-chart").then((m) => m.RevenueChart), { ssr: false });
-const InvestmentChart = dynamic(() => import("@/components/investment-chart").then((m) => m.InvestmentChart), {
-  ssr: false,
-});
+import { InvestmentChart } from "@/components/investment-chart";
+import { NoSSR } from "@/components/no-ssr";
+import { RevenueChart } from "@/components/revenue-chart";
 import { calculateInvestmentTimeline, calculateRevenueShares } from "@/lib/calculations";
 import { getAllData } from "@/lib/data";
 
@@ -41,8 +38,8 @@ export default async function RevenuePage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Revenue Share</h1>
 
-      <RevenueChart data={revenueShares} />
-      <InvestmentChart data={investmentTimeline} />
+      <NoSSR><RevenueChart data={revenueShares} /></NoSSR>
+      <NoSSR><InvestmentChart data={investmentTimeline} /></NoSSR>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
         <h2 className="mb-4 text-lg font-semibold">
