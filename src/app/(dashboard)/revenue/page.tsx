@@ -1,5 +1,9 @@
-import { InvestmentChart } from "@/components/investment-chart";
-import { RevenueChart } from "@/components/revenue-chart";
+import dynamic from "next/dynamic";
+
+const RevenueChart = dynamic(() => import("@/components/revenue-chart").then((m) => m.RevenueChart), { ssr: false });
+const InvestmentChart = dynamic(() => import("@/components/investment-chart").then((m) => m.InvestmentChart), {
+  ssr: false,
+});
 import { calculateInvestmentTimeline, calculateRevenueShares } from "@/lib/calculations";
 import { getAllData } from "@/lib/data";
 

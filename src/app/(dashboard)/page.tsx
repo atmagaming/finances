@@ -1,7 +1,9 @@
 import { auth } from "@/auth";
-import { ExpenseChart } from "@/components/expense-chart";
 import { aggregateExpensesByMonth, projectExpenses } from "@/lib/calculations";
 import { getCachedPeople, getCachedSensitiveData, getCachedTransactions } from "@/lib/data";
+import dynamic from "next/dynamic";
+
+const ExpenseChart = dynamic(() => import("@/components/expense-chart").then((m) => m.ExpenseChart), { ssr: false });
 
 export default async function OverviewPage() {
   const session = await auth();
