@@ -1,5 +1,5 @@
-import { getCachedTransactions } from "@/lib/data";
 import { TransactionsTable } from "@/components/transactions-table";
+import { getCachedTransactions } from "@/lib/data";
 
 export default async function TransactionsPage() {
   const transactions = await getCachedTransactions();

@@ -1,16 +1,23 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 const links = [
   { href: "/", label: "Overview" },
   { href: "/transactions", label: "Transactions" },
-  { href: "/projections", label: "Projections" },
   { href: "/revenue", label: "Revenue" },
+  { href: "/projections", label: "Projections" },
 ];
 
-export function Nav() {
+interface NavProps {
+  userName: string;
+  userImage: string | null;
+}
+
+export function Nav({ userName, userImage }: NavProps) {
   const pathname = usePathname();
 
   return (
@@ -19,7 +26,7 @@ export function Nav() {
         <Link href="/" className="text-lg font-semibold tracking-tight text-[var(--accent)]">
           Atma Finances
         </Link>
-        <div className="flex gap-1">
+        <div className="flex flex-1 gap-1">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -33,6 +40,17 @@ export function Nav() {
               {link.label}
             </Link>
           ))}
+        </div>
+        <div className="flex items-center gap-3">
+          {userImage && <Image src={userImage} alt={userName} width={28} height={28} className="rounded-full" />}
+          {userName && <span className="text-sm text-[var(--text-muted)]">{userName}</span>}
+          <button
+            type="button"
+            onClick={() => void signOut({ callbackUrl: "/login" })}
+            className="rounded-md px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text)] hover:bg-[var(--bg-card-hover)]"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </nav>

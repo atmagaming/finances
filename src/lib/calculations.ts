@@ -1,4 +1,11 @@
-import type { Transaction, SensitiveData, MonthlyExpense, ProjectionMonth, RevenueShare } from "./types";
+import type {
+  InvestmentPoint,
+  MonthlyExpense,
+  ProjectionMonth,
+  RevenueShare,
+  SensitiveData,
+  Transaction,
+} from "./types";
 
 /** Count Mondays (sprint starts) in a given month */
 function countMondaysInMonth(year: number, month: number): number {
@@ -46,7 +53,7 @@ export function aggregateExpensesByMonth(transactions: Transaction[]): MonthlyEx
   for (const tx of transactions) {
     if (!tx.logicalDate) continue;
     const month = tx.logicalDate.slice(0, 7);
-    const existing = byMonth.get(month) ?? { month, paid: 0, accrued: 0, invested: 0, income: 0 };
+    const existing = byMonth.get(month) ?? { month, paid: 0, accrued: 0, invested: 0, investments: 0 };
 
     const usd = Math.abs(tx.usdEquivalent);
     switch (tx.method) {
@@ -57,8 +64,8 @@ export function aggregateExpensesByMonth(transactions: Transaction[]): MonthlyEx
         existing.accrued += usd;
         break;
       case "Invested":
-        // Positive amounts = income/investment into the company
-        if (tx.amount > 0) existing.income += usd;
+        // Positive amounts = investments into the company
+        if (tx.amount > 0) existing.investments += usd;
         else existing.invested += usd;
         break;
     }
@@ -66,9 +73,7 @@ export function aggregateExpensesByMonth(transactions: Transaction[]): MonthlyEx
     byMonth.set(month, existing);
   }
 
-  return [...byMonth.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, v]) => v);
+  return [...byMonth.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
 }
 
 /** Project future expenses based on active people's rates */
@@ -121,7 +126,10 @@ export function calculateRevenueShares(
   if (transactions.length === 0) return [];
 
   // Find date range
-  const sortedDates = transactions.filter((t) => t.logicalDate).map((t) => t.logicalDate).sort();
+  const sortedDates = transactions
+    .filter((t) => t.logicalDate)
+    .map((t) => t.logicalDate)
+    .sort();
   const firstMonth = sortedDates[0].slice(0, 7);
   const now = new Date();
   const futureMonth = formatMonth(now.getFullYear() + 3, now.getMonth());
@@ -199,6 +207,88 @@ export function calculateRevenueShares(
     }
 
     result.push({ month, shares });
+  }
+
+  return result;
+}
+
+/** Per-month investment increments per person (historical + projected), for the investment timeline chart */
+export function calculateInvestmentTimeline(
+  transactions: Transaction[],
+  sensitiveData: SensitiveData[],
+  payeePersonMap: Map<string, string>,
+  personNames: Map<string, string>,
+  monthsAhead = 18,
+): InvestmentPoint[] {
+  if (transactions.length === 0) return [];
+
+  const sortedDates = transactions
+    .filter((t) => t.logicalDate)
+    .map((t) => t.logicalDate)
+    .sort();
+  const firstMonth = sortedDates[0].slice(0, 7);
+  const now = new Date();
+  const lastHistoricalMonth = formatMonth(now.getFullYear(), now.getMonth());
+  const futureMonth = addMonths(lastHistoricalMonth, monthsAhead);
+  const months = getMonthRange(firstMonth, futureMonth);
+
+  // Pre-group per-month increments by person
+  const accruedByMonth = new Map<string, Map<string, number>>();
+  const investedByMonth = new Map<string, Map<string, number>>();
+
+  for (const tx of transactions) {
+    if (!tx.logicalDate) continue;
+    const month = tx.logicalDate.slice(0, 7);
+    const personId = payeePersonMap.get(tx.payeeId);
+    if (!personId) continue;
+
+    if (tx.method === "Accrued") {
+      const m = accruedByMonth.get(month) ?? new Map<string, number>();
+      m.set(personId, (m.get(personId) ?? 0) + Math.abs(tx.usdEquivalent));
+      accruedByMonth.set(month, m);
+    } else if (tx.method === "Invested" && tx.amount > 0) {
+      const m = investedByMonth.get(month) ?? new Map<string, number>();
+      m.set(personId, (m.get(personId) ?? 0) + Math.abs(tx.usdEquivalent));
+      investedByMonth.set(month, m);
+    }
+  }
+
+  const result: InvestmentPoint[] = [];
+
+  for (const month of months) {
+    const isProjected = month > lastHistoricalMonth;
+    const values: Record<string, number> = {};
+
+    if (!isProjected) {
+      // Historical: sum accrued + direct investments
+      const accrued = accruedByMonth.get(month);
+      if (accrued) {
+        for (const [personId, amount] of accrued) {
+          const name = personNames.get(personId) ?? personId.slice(0, 8);
+          values[name] = (values[name] ?? 0) + amount;
+        }
+      }
+      const invested = investedByMonth.get(month);
+      if (invested) {
+        for (const [personId, amount] of invested) {
+          const name = personNames.get(personId) ?? personId.slice(0, 8);
+          values[name] = (values[name] ?? 0) + amount;
+        }
+      }
+    } else {
+      // Projected: monthly accrued based on active rates
+      const [year, m] = parseMonth(month);
+      const mondays = countMondaysInMonth(year, m);
+      for (const sd of sensitiveData) {
+        if (sd.status !== "Active") continue;
+        if (!sd.hourlyInvested) continue;
+        const monthlyAccrued = sd.hoursPerWeek * sd.hourlyInvested * mondays;
+        const name = personNames.get(sd.personId) ?? sd.personId.slice(0, 8);
+        values[name] = (values[name] ?? 0) + Math.round(monthlyAccrued);
+      }
+    }
+
+    result.push({ month, values, isProjected });
   }
 
   return result;

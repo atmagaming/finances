@@ -1,6 +1,17 @@
 import { unstable_cache } from "next/cache";
-import { queryAllPages, text, num, select, date, dateEnd, relation, formulaString, formulaNumber } from "./notion";
-import type { Transaction, Person, SensitiveData, Payee, Vacation, TransactionMethod } from "./types";
+import {
+  date,
+  dateEnd,
+  formulaNumber,
+  formulaString,
+  num,
+  people,
+  queryAllPages,
+  relation,
+  select,
+  text,
+} from "./notion";
+import type { Payee, Person, SensitiveData, Transaction, TransactionMethod, Vacation } from "./types";
 
 const PEOPLE_DB = process.env.NOTION_PEOPLE_DB_ID ?? "";
 const SENSITIVE_DB = process.env.NOTION_SENSITIVE_DATA_DB_ID ?? "";
@@ -15,6 +26,7 @@ async function fetchPeople(): Promise<Person[]> {
     name: text(p.properties.Name),
     status: formulaString(p.properties.Status),
     sensitiveDataIds: relation(p.properties["Sensitive Data"]),
+    notionEmail: people(p.properties["Notion Person"]),
   }));
 }
 
@@ -22,9 +34,7 @@ async function fetchSensitiveData(): Promise<SensitiveData[]> {
   const pages = await queryAllPages(SENSITIVE_DB);
   return pages.map((p) => {
     const scheduleStr = text(p.properties["Schedule (hours)"]);
-    const schedule = scheduleStr
-      ? scheduleStr.split(",").map((s) => Number(s.trim()) || 0)
-      : [];
+    const schedule = scheduleStr ? scheduleStr.split(",").map((s) => Number(s.trim()) || 0) : [];
     return {
       id: p.id,
       name: text(p.properties.Name),

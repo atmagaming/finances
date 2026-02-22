@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { Transaction } from "@/lib/types";
 
 type SortField = "logicalDate" | "amount" | "usdEquivalent" | "method" | "category" | "payeeName";
@@ -12,7 +12,10 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
   const [methodFilter, setMethodFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
-  const categories = useMemo(() => [...new Set(transactions.map((t) => t.category).filter(Boolean))].sort(), [transactions]);
+  const categories = useMemo(
+    () => [...new Set(transactions.map((t) => t.category).filter(Boolean))].sort(),
+    [transactions],
+  );
   const methods = ["Paid", "Accrued", "Invested"];
 
   const filtered = useMemo(() => {
@@ -22,14 +25,17 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
     return result;
   }, [transactions, methodFilter, categoryFilter]);
 
-  const sorted = useMemo(() => {
-    return [...filtered].sort((a, b) => {
-      const aVal = a[sortField];
-      const bVal = b[sortField];
-      const cmp = typeof aVal === "number" && typeof bVal === "number" ? aVal - bVal : String(aVal).localeCompare(String(bVal));
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-  }, [filtered, sortField, sortDir]);
+  const sorted = useMemo(
+    () =>
+      [...filtered].sort((a, b) => {
+        const aVal = a[sortField];
+        const bVal = b[sortField];
+        const cmp =
+          typeof aVal === "number" && typeof bVal === "number" ? aVal - bVal : String(aVal).localeCompare(String(bVal));
+        return sortDir === "asc" ? cmp : -cmp;
+      }),
+    [filtered, sortField, sortDir],
+  );
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -39,7 +45,8 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
     }
   };
 
-  const headerClass = "cursor-pointer select-none px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)] hover:text-[var(--text)]";
+  const headerClass =
+    "cursor-pointer select-none px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)] hover:text-[var(--text)]";
 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)]">
@@ -51,7 +58,9 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
         >
           <option value="all">All Methods</option>
           {methods.map((m) => (
-            <option key={m} value={m}>{m}</option>
+            <option key={m} value={m}>
+              {m}
+            </option>
           ))}
         </select>
         <select
@@ -61,7 +70,9 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
         >
           <option value="all">All Categories</option>
           {categories.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>
+              {c}
+            </option>
           ))}
         </select>
         <span className="ml-auto self-center text-sm text-[var(--text-muted)]">{sorted.length} transactions</span>
@@ -73,7 +84,9 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
               <th className={headerClass} onClick={() => toggleSort("logicalDate")}>
                 Date {sortField === "logicalDate" ? (sortDir === "asc" ? "^" : "v") : ""}
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">Description</th>
+              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
+                Description
+              </th>
               <th className={headerClass} onClick={() => toggleSort("payeeName")}>
                 Payee {sortField === "payeeName" ? (sortDir === "asc" ? "^" : "v") : ""}
               </th>
@@ -90,7 +103,10 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
           </thead>
           <tbody>
             {sorted.map((tx) => (
-              <tr key={tx.id} className="border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors">
+              <tr
+                key={tx.id}
+                className="border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors"
+              >
                 <td className="whitespace-nowrap px-3 py-2 text-sm">{tx.logicalDate}</td>
                 <td className="px-3 py-2 text-sm max-w-xs truncate">{tx.note}</td>
                 <td className="px-3 py-2 text-sm">{tx.payeeName}</td>
@@ -108,7 +124,9 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
                     {tx.method}
                   </span>
                 </td>
-                <td className={`whitespace-nowrap px-3 py-2 text-sm font-mono ${tx.usdEquivalent > 0 ? "text-[var(--green)]" : "text-[var(--red)]"}`}>
+                <td
+                  className={`whitespace-nowrap px-3 py-2 text-sm font-mono ${tx.usdEquivalent > 0 ? "text-[var(--green)]" : "text-[var(--red)]"}`}
+                >
                   ${Math.abs(tx.usdEquivalent).toLocaleString()}
                 </td>
               </tr>

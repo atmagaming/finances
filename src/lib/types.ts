@@ -19,6 +19,7 @@ export interface Person {
   name: string;
   status: string;
   sensitiveDataIds: string[];
+  notionEmail: string;
 }
 
 export interface SensitiveData {
@@ -54,7 +55,7 @@ export interface MonthlyExpense {
   paid: number;
   accrued: number;
   invested: number;
-  income: number;
+  investments: number;
 }
 
 export interface ProjectionMonth {
@@ -67,4 +68,10 @@ export interface ProjectionMonth {
 export interface RevenueShare {
   month: string;
   shares: Record<string, number>;
+}
+
+export interface InvestmentPoint {
+  month: string;
+  values: Record<string, number>; // person name -> per-month increment (USD)
+  isProjected: boolean;
 }

@@ -98,3 +98,9 @@ export function formulaNumber(prop: NotionProperty | undefined): number {
   const f = prop.formula as { type: string; number?: number };
   return f.number ?? 0;
 }
+
+export function people(prop: NotionProperty | undefined): string {
+  if (!prop || prop.type !== "people") return "";
+  const items = prop.people as Array<{ person?: { email?: string } }> | undefined;
+  return items?.[0]?.person?.email ?? "";
+}
