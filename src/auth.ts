@@ -6,11 +6,14 @@ const baseUrl = process.env.AUTH_URL ?? "http://localhost:3000";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    Notion({
-      clientId: process.env.AUTH_NOTION_ID,
-      clientSecret: process.env.AUTH_NOTION_SECRET,
-      redirectUri: `${baseUrl}/api/auth/callback/notion`,
-    }),
+    {
+      ...Notion({
+        clientId: process.env.AUTH_NOTION_ID,
+        clientSecret: process.env.AUTH_NOTION_SECRET,
+        redirectUri: `${baseUrl}/api/auth/callback/notion`,
+      }),
+      checks: ["state"],
+    },
   ],
   session: { strategy: "jwt" },
   callbacks: {
@@ -20,8 +23,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (profile as { owner?: { user?: { person?: { email?: string } } } }).owner?.user?.person?.email ??
           token.email ??
           "";
-        const people = await getCachedPeople();
-        token.personId = people.find((p) => p.notionEmail === email)?.id ?? null;
+        try {
+          const people = await getCachedPeople();
+          token.personId = people.find((p) => p.notionEmail === email)?.id ?? null;
+        } catch (e) {
+          console.error("Failed to resolve personId during login:", e);
+          token.personId = null;
+        }
       }
       return token;
     },

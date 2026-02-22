@@ -27,10 +27,16 @@ export async function queryAllPages(databaseId: string): Promise<NotionPage[]> {
       headers,
       body: JSON.stringify(body),
     }).then((r) => r.json())) as {
-      results: Array<{ id: string; properties: Record<string, NotionProperty> }>;
+      results?: Array<{ id: string; properties: Record<string, NotionProperty> }>;
       has_more: boolean;
       next_cursor: string | null;
+      object?: string;
+      status?: number;
+      message?: string;
     };
+
+    if (!response.results)
+      throw new Error(`Notion API error for DB ${databaseId}: ${response.status} ${response.message}`);
 
     for (const page of response.results) {
       pages.push({ id: page.id, properties: page.properties });
