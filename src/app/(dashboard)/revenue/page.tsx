@@ -81,9 +81,7 @@ export default async function RevenuePage() {
                     className="border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors"
                   >
                     <td className="px-4 py-2 text-sm font-medium">{name}</td>
-                    <td className="px-4 py-2 text-right text-sm font-mono">
-                      ${historicalInvestment.toLocaleString()}
-                    </td>
+                    <td className="px-4 py-2 text-right text-sm font-mono">${historicalInvestment.toLocaleString()}</td>
                     <td className="px-4 py-2 text-right text-sm font-mono font-bold text-[var(--accent)]">
                       {pct.toFixed(1)}%
                     </td>

@@ -3,10 +3,6 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@example.com";
-const baseUrl = process.env.AUTH_URL ?? "http://localhost:3000";
-
 export async function POST(request: Request) {
   const { email } = (await request.json()) as { email: string };
 
@@ -20,9 +16,12 @@ export async function POST(request: Request) {
 
     await prisma.passwordResetToken.create({ data: { token, userId: user.id, expiresAt } });
 
+    const baseUrl = process.env.AUTH_URL ?? "http://localhost:3000";
     const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
     try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@example.com";
       await resend.emails.send({
         from: fromEmail,
         to: email,
