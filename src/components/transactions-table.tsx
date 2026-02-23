@@ -6,7 +6,13 @@ import type { Transaction } from "@/lib/types";
 type SortField = "logicalDate" | "amount" | "usdEquivalent" | "method" | "category" | "payeeName";
 type SortDir = "asc" | "desc";
 
-export function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
+export function TransactionsTable({
+  transactions,
+  showPayee = true,
+}: {
+  transactions: Transaction[];
+  showPayee?: boolean;
+}) {
   const [sortField, setSortField] = useState<SortField>("logicalDate");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [methodFilter, setMethodFilter] = useState<string>("all");
@@ -87,9 +93,11 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
               <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
                 Description
               </th>
-              <th className={headerClass} onClick={() => toggleSort("payeeName")}>
-                Payee {sortField === "payeeName" ? (sortDir === "asc" ? "^" : "v") : ""}
-              </th>
+              {showPayee && (
+                <th className={headerClass} onClick={() => toggleSort("payeeName")}>
+                  Payee {sortField === "payeeName" ? (sortDir === "asc" ? "^" : "v") : ""}
+                </th>
+              )}
               <th className={headerClass} onClick={() => toggleSort("category")}>
                 Category {sortField === "category" ? (sortDir === "asc" ? "^" : "v") : ""}
               </th>
@@ -109,7 +117,7 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
               >
                 <td className="whitespace-nowrap px-3 py-2 text-sm">{tx.logicalDate}</td>
                 <td className="px-3 py-2 text-sm max-w-xs truncate">{tx.note}</td>
-                <td className="px-3 py-2 text-sm">{tx.payeeName}</td>
+                {showPayee && <td className="px-3 py-2 text-sm">{tx.payeeName}</td>}
                 <td className="px-3 py-2 text-sm">{tx.category}</td>
                 <td className="px-3 py-2 text-sm">
                   <span

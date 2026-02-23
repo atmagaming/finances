@@ -13,12 +13,13 @@ const links = [
 ];
 
 interface NavProps {
-  userName: string;
-  userImage: string | null;
+  userName?: string;
+  userImage?: string | null;
 }
 
 export function Nav({ userName, userImage }: NavProps) {
   const pathname = usePathname();
+  const isAuthenticated = !!userName;
 
   return (
     <nav className="border-b border-[var(--border)] bg-[var(--bg-card)]">
@@ -42,15 +43,26 @@ export function Nav({ userName, userImage }: NavProps) {
           ))}
         </div>
         <div className="flex items-center gap-3">
-          {userImage && <Image src={userImage} alt={userName} width={28} height={28} className="rounded-full" />}
-          {userName && <span className="text-sm text-[var(--text-muted)]">{userName}</span>}
-          <button
-            type="button"
-            onClick={() => void signOut({ callbackUrl: "/login" })}
-            className="rounded-md px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text)] hover:bg-[var(--bg-card-hover)]"
-          >
-            Sign out
-          </button>
+          {isAuthenticated ? (
+            <>
+              {userImage && <Image src={userImage} alt={userName} width={28} height={28} className="rounded-full" />}
+              <span className="text-sm text-[var(--text-muted)]">{userName}</span>
+              <button
+                type="button"
+                onClick={() => void signOut({ callbackUrl: "/login" })}
+                className="rounded-md px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text)] hover:bg-[var(--bg-card-hover)]"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-md px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text)] hover:bg-[var(--bg-card-hover)]"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </div>
     </nav>

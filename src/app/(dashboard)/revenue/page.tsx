@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import { InvestmentChart } from "@/components/investment-chart";
 import { NoSSR } from "@/components/no-ssr";
 import { RevenueChart } from "@/components/revenue-chart";
@@ -5,7 +6,8 @@ import { calculateInvestmentTimeline, calculateRevenueShares } from "@/lib/calcu
 import { getAllData } from "@/lib/data";
 
 export default async function RevenuePage() {
-  const { transactions, sensitiveData, payees, people } = await getAllData();
+  const [session, { transactions, sensitiveData, payees, people }] = await Promise.all([auth(), getAllData()]);
+  const isAuthenticated = !!session;
 
   const payeePersonMap = new Map<string, string>();
   for (const payee of payees) {
@@ -18,11 +20,14 @@ export default async function RevenuePage() {
   const revenueShares = calculateRevenueShares(transactions, sensitiveData, payeePersonMap, personNames);
   const investmentTimeline = calculateInvestmentTimeline(transactions, sensitiveData, payeePersonMap, personNames, 18);
 
-  // Current snapshot for the table
-  const currentSnapshot = revenueShares.length > 0 ? revenueShares[revenueShares.length - 1] : null;
-  const currentShares = currentSnapshot ? Object.entries(currentSnapshot.shares).sort(([, a], [, b]) => b - a) : [];
+  // For public view: merge all person values into a single "Team" entry
+  const teamInvestmentTimeline = investmentTimeline.map((point) => ({
+    month: point.month,
+    values: { Team: Object.values(point.values).reduce((sum, v) => sum + v, 0) },
+    isProjected: point.isProjected,
+  }));
 
-  // Cumulative historical investments per person (for table)
+  // Cumulative historical investments
   const cumulativeByPerson = new Map<string, number>();
   for (const tx of transactions) {
     const personId = payeePersonMap.get(tx.payeeId);
@@ -34,12 +39,24 @@ export default async function RevenuePage() {
     }
   }
 
+  const totalInvestment = [...cumulativeByPerson.values()].reduce((sum, v) => sum + v, 0);
+
+  // Current snapshot for the table
+  const currentSnapshot = revenueShares.length > 0 ? revenueShares[revenueShares.length - 1] : null;
+  const currentShares = currentSnapshot ? Object.entries(currentSnapshot.shares).sort(([, a], [, b]) => b - a) : [];
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Revenue Share</h1>
 
-      <NoSSR><RevenueChart data={revenueShares} /></NoSSR>
-      <NoSSR><InvestmentChart data={investmentTimeline} /></NoSSR>
+      {isAuthenticated && (
+        <NoSSR>
+          <RevenueChart data={revenueShares} />
+        </NoSSR>
+      )}
+      <NoSSR>
+        <InvestmentChart data={isAuthenticated ? investmentTimeline : teamInvestmentTimeline} />
+      </NoSSR>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
         <h2 className="mb-4 text-lg font-semibold">
@@ -57,33 +74,44 @@ export default async function RevenuePage() {
             <thead>
               <tr className="border-b border-[var(--border)]">
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
-                  Person
+                  {isAuthenticated ? "Person" : ""}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
                   Historical Investment (USD)
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
-                  Projected Share (%)
-                </th>
+                {isAuthenticated && (
+                  <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
+                    Projected Share (%)
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
-              {currentShares.map(([name, pct]) => {
-                const personId = [...personNames.entries()].find(([, n]) => n === name)?.[0];
-                const historicalInvestment = personId ? (cumulativeByPerson.get(personId) ?? 0) : 0;
-                return (
-                  <tr
-                    key={name}
-                    className="border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors"
-                  >
-                    <td className="px-4 py-2 text-sm font-medium">{name}</td>
-                    <td className="px-4 py-2 text-right text-sm font-mono">${historicalInvestment.toLocaleString()}</td>
-                    <td className="px-4 py-2 text-right text-sm font-mono font-bold text-[var(--accent)]">
-                      {pct.toFixed(1)}%
-                    </td>
-                  </tr>
-                );
-              })}
+              {isAuthenticated ? (
+                currentShares.map(([name, pct]) => {
+                  const personId = [...personNames.entries()].find(([, n]) => n === name)?.[0];
+                  const historicalInvestment = personId ? (cumulativeByPerson.get(personId) ?? 0) : 0;
+                  return (
+                    <tr
+                      key={name}
+                      className="border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors"
+                    >
+                      <td className="px-4 py-2 text-sm font-medium">{name}</td>
+                      <td className="px-4 py-2 text-right text-sm font-mono">
+                        ${historicalInvestment.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-2 text-right text-sm font-mono font-bold text-[var(--accent)]">
+                        {pct.toFixed(1)}%
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr className="border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors">
+                  <td className="px-4 py-2 text-sm font-medium">Team</td>
+                  <td className="px-4 py-2 text-right text-sm font-mono">${totalInvestment.toLocaleString()}</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
