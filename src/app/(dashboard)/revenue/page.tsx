@@ -38,8 +38,12 @@ export default async function RevenuePage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Revenue Share</h1>
 
-      <NoSSR><RevenueChart data={revenueShares} /></NoSSR>
-      <NoSSR><InvestmentChart data={investmentTimeline} /></NoSSR>
+      <NoSSR>
+        <RevenueChart data={revenueShares} />
+      </NoSSR>
+      <NoSSR>
+        <InvestmentChart data={investmentTimeline} />
+      </NoSSR>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
         <h2 className="mb-4 text-lg font-semibold">

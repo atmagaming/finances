@@ -51,7 +51,9 @@ export default async function OverviewPage() {
           </div>
         ))}
       </div>
-      <NoSSR><ExpenseChart historical={monthlyExpenses} projections={projections} /></NoSSR>
+      <NoSSR>
+        <ExpenseChart historical={monthlyExpenses} projections={projections} />
+      </NoSSR>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
         <h2 className="mb-4 text-lg font-semibold">Active Team Breakdown</h2>

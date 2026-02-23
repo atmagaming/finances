@@ -1,28 +1,51 @@
+import { compare } from "bcryptjs";
 import NextAuth from "next-auth";
-import Notion from "next-auth/providers/notion";
+import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { getCachedPeople } from "@/lib/data";
-
-const baseUrl = process.env.AUTH_URL ?? "http://localhost:3000";
+import { prisma } from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    {
-      ...Notion({
-        clientId: process.env.AUTH_NOTION_ID,
-        clientSecret: process.env.AUTH_NOTION_SECRET,
-        redirectUri: `${baseUrl}/api/auth/callback/notion`,
-      }),
-      checks: ["state"],
-    },
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+    }),
+    Credentials({
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = credentials.email as string;
+        const password = credentials.password as string;
+        if (!email || !password) return null;
+
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user?.passwordHash) return null;
+
+        const valid = await compare(password, user.passwordHash);
+        if (!valid) return null;
+
+        return { id: user.id, email: user.email, name: user.name, image: user.image };
+      },
+    }),
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    async jwt({ token, profile }) {
-      if (profile) {
-        const email =
-          (profile as { owner?: { user?: { person?: { email?: string } } } }).owner?.user?.person?.email ??
-          token.email ??
-          "";
+    async signIn({ user, account }) {
+      if (account?.provider === "google" && user.email) {
+        await prisma.user.upsert({
+          where: { email: user.email },
+          update: { name: user.name, image: user.image },
+          create: { email: user.email, name: user.name, image: user.image },
+        });
+      }
+      return true;
+    },
+    async jwt({ token, trigger }) {
+      if (trigger === "signIn" || trigger === "signUp") {
+        const email = token.email ?? "";
         try {
           const people = await getCachedPeople();
           token.personId = people.find((p) => p.notionEmail === email)?.id ?? null;
