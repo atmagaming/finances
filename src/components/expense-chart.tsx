@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
 import { getLastConfirmedMonth, getMonthRange } from "@/lib/calculations";
 import type { MonthlyExpense, ProjectionMonth } from "@/lib/types";
-import { chartTooltipContent, computeChartTicks, formatMonthLabel, ResponsiveChart } from "./chart-base";
+import { chartTooltipContent, formatMonthLabel, quarterTicks, ResponsiveChart } from "./chart-base";
 
 interface MergedPoint {
   month: string;
@@ -125,7 +125,7 @@ export function ExpenseChart({
     () => buildMerged(historical, projections, cumulative, lastConfirmed),
     [historical, projections, cumulative, lastConfirmed],
   );
-  const ticks = useMemo(() => computeChartTicks(data.map((d) => d.month)), [data]);
+  const ticks = useMemo(() => quarterTicks(data.map((d) => d.month)), [data]);
 
   return (
     <div className="rounded-xl bg-[var(--bg-card)] p-6" style={{ boxShadow: "var(--shadow)" }}>

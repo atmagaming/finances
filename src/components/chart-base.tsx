@@ -24,14 +24,14 @@ export function formatMonthLabel(m: string): string {
   return new Date(year, month - 1, 1).toLocaleString("en-US", { month: "short", year: "numeric" });
 }
 
-const QUARTER_MONTHS = new Set(["01", "03", "06", "09"]);
-
-/** Returns tick months: Jan/Mar/Jun/Sep across the range, plus first and last month. */
-export function computeChartTicks(months: string[]): string[] {
+export function quarterTicks(months: string[]): string[] {
   if (months.length === 0) return [];
-  const ticks = new Set<string>([months[0], months[months.length - 1]]);
-  for (const month of months) if (QUARTER_MONTHS.has(month.slice(5, 7))) ticks.add(month);
-  return [...ticks].sort();
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const special = new Set([months[0], months[months.length - 1], currentMonth]);
+  return months.filter((m) => {
+    const month = Number(m.split("-")[1]);
+    return month === 1 || month === 4 || month === 7 || month === 10 || special.has(m);
+  });
 }
 
 const tooltipContentStyle = {
@@ -52,7 +52,6 @@ export function chartTooltipContent(formatter: (value: number, name: string) => 
     if (!active || !payload?.length) return null;
     const withValues = payload.filter((entry) => entry.value != null);
     if (withValues.length === 0) return null;
-    // Deduplicate: prefer historical over projected for the same base name
     const seen = new Set<string>();
     const deduped = [];
     for (const entry of withValues) {

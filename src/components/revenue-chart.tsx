@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
 import type { RevenueShare } from "@/lib/types";
-import { CHART_COLORS, chartTooltipContent, computeChartTicks, formatMonthLabel, ResponsiveChart } from "./chart-base";
+import { CHART_COLORS, chartTooltipContent, formatMonthLabel, quarterTicks, ResponsiveChart } from "./chart-base";
 
 type ChartRow = Record<string, string | number | null>;
 
@@ -42,7 +42,7 @@ export function RevenueChart({ data }: { data: RevenueShare[] }) {
   }, [data]);
 
   const chartData = useMemo(() => buildChartData(data, names), [data, names]);
-  const ticks = useMemo(() => computeChartTicks(chartData.map((d) => d.month as string)), [chartData]);
+  const ticks = useMemo(() => quarterTicks(chartData.map((d) => d.month as string)), [chartData]);
   const boundaryMonth = [...data].reverse().find((entry) => !entry.isProjected)?.month;
 
   return (
