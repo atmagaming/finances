@@ -35,6 +35,16 @@ function addMonths(monthStr: string, n: number): string {
   return formatMonth(d.getFullYear(), d.getMonth());
 }
 
+const PAYMENT_CUTOFF_DAY = 10;
+
+/** Last month whose payments are fully confirmed (paid by the 10th of the following month) */
+export function getLastConfirmedMonth(): string {
+  const now = new Date();
+  const monthsBack = now.getDate() > PAYMENT_CUTOFF_DAY ? 1 : 2;
+  const date = new Date(now.getFullYear(), now.getMonth() - monthsBack, 1);
+  return formatMonth(date.getFullYear(), date.getMonth());
+}
+
 /** Get all months between two YYYY-MM strings, inclusive */
 function getMonthRange(start: string, end: string): string[] {
   const months: string[] = [];
@@ -78,12 +88,11 @@ export function aggregateExpensesByMonth(transactions: Transaction[]): MonthlyEx
 
 /** Project future expenses based on active people's rates */
 export function projectExpenses(sensitiveData: SensitiveData[], monthsAhead: number): ProjectionMonth[] {
-  const now = new Date();
-  const currentMonth = formatMonth(now.getFullYear(), now.getMonth());
+  const firstUnconfirmed = addMonths(getLastConfirmedMonth(), 1);
   const projections: ProjectionMonth[] = [];
 
   for (let i = 0; i < monthsAhead; i++) {
-    const monthStr = addMonths(currentMonth, i);
+    const monthStr = addMonths(firstUnconfirmed, i);
     const [year, month] = parseMonth(monthStr);
     const mondays = countMondaysInMonth(year, month);
 
@@ -131,8 +140,7 @@ export function calculateRevenueShares(
     .map((t) => t.logicalDate)
     .sort();
   const firstMonth = sortedDates[0].slice(0, 7);
-  const now = new Date();
-  const futureMonth = formatMonth(now.getFullYear() + 3, now.getMonth());
+  const futureMonth = addMonths(getLastConfirmedMonth(), 36);
   const months = getMonthRange(firstMonth, futureMonth);
 
   // Track cumulative investments per person
@@ -160,7 +168,7 @@ export function calculateRevenueShares(
   }
 
   const result: RevenueShare[] = [];
-  const lastHistoricalMonth = formatMonth(now.getFullYear(), now.getMonth());
+  const lastConfirmed = getLastConfirmedMonth();
 
   for (const month of months) {
     // Add historical accrued amounts
@@ -180,7 +188,7 @@ export function calculateRevenueShares(
     }
 
     // For future months, project accrued based on current rates
-    if (month > lastHistoricalMonth) {
+    if (month > lastConfirmed) {
       const [year, m] = parseMonth(month);
       const mondays = countMondaysInMonth(year, m);
 
@@ -206,7 +214,7 @@ export function calculateRevenueShares(
       }
     }
 
-    result.push({ month, shares });
+    result.push({ month, shares, isProjected: month > lastConfirmed });
   }
 
   return result;
@@ -227,9 +235,8 @@ export function calculateInvestmentTimeline(
     .map((t) => t.logicalDate)
     .sort();
   const firstMonth = sortedDates[0].slice(0, 7);
-  const now = new Date();
-  const lastHistoricalMonth = formatMonth(now.getFullYear(), now.getMonth());
-  const futureMonth = addMonths(lastHistoricalMonth, monthsAhead);
+  const lastConfirmed = getLastConfirmedMonth();
+  const futureMonth = addMonths(lastConfirmed, monthsAhead);
   const months = getMonthRange(firstMonth, futureMonth);
 
   // Pre-group per-month increments by person
@@ -256,7 +263,7 @@ export function calculateInvestmentTimeline(
   const result: InvestmentPoint[] = [];
 
   for (const month of months) {
-    const isProjected = month > lastHistoricalMonth;
+    const isProjected = month > lastConfirmed;
     const values: Record<string, number> = {};
 
     if (!isProjected) {

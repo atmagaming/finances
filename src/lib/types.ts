@@ -68,6 +68,7 @@ export interface ProjectionMonth {
 export interface RevenueShare {
   month: string;
   shares: Record<string, number>;
+  isProjected: boolean;
 }
 
 export interface InvestmentPoint {
