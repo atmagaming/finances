@@ -1,7 +1,18 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
   "files": {
-    "includes": ["src/**", "*.json", "*.ts", "!.claude/**"],
+    "includes": [
+      "server/**",
+      "composables/**",
+      "middleware/**",
+      "types/**",
+      "*.ts",
+      "*.json",
+      "!.claude",
+      "!.nuxt",
+      "!.output",
+      "!generated"
+    ],
     "ignoreUnknown": true
   },
   "linter": {
@@ -19,9 +30,6 @@
       },
       "nursery": {
         "noFloatingPromises": "error"
-      },
-      "complexity": {
-        "noImportantStyles": "warn"
       }
     }
   },

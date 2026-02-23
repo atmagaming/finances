@@ -1,5 +1,6 @@
 node_modules/
-.next/
+.nuxt/
+.output/
 .env
 .env.local
 bun.lockb
@@ -7,4 +8,7 @@ tsconfig.tsbuildinfo
 .claude/worktrees/
 prisma/dev.db
 prisma/dev.db-journal
+generated/
 .playwright-mcp/
+.vscode/
+.next/

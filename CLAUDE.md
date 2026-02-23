@@ -24,11 +24,15 @@ class Example {
 
 ## Other Development Notes
 
+- This is a **Nuxt 3 + Vue 3** project (migrated from Next.js)
+- Charts use **Apache ECharts** via `vue-echarts`
+- Auth uses **nuxt-auth-utils** (session-based, not JWT)
 - Never run `dev` script
 - Do not run full `build` to check
 - Use `ide - getDiagnostics` MCP tool to check issues in the current file
 - Run `bun run lint` to check typescript and biome errors and warnings
 - Run `bun run format` to format everything after your changes
+- Biome only lints `.ts` files (not `.vue`) — Vue files are typechecked by `vue-tsc`
 
 ## @elumixor packages
 
