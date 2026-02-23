@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "nuxt dev",
-    "build": "nuxt build",
+    "build": "prisma generate && nuxt build",
     "start": "node .output/server/index.mjs",
     "lint": "npx @biomejs/biome check . && npx vue-tsc --noEmit",
     "format": "npx @biomejs/biome check --write ."
