@@ -3,3 +3,4 @@ node_modules/
 .env.local
 bun.lockb
 tsconfig.tsbuildinfo
+.claude/worktrees/

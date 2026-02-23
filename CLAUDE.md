@@ -83,3 +83,7 @@ Adds Array extensions (`.first`, `.last`, `.isEmpty`, `.shuffle()`, `.pick()`, `
 ### `@elumixor/frontils`
 
 Utilities: `all()` (typed Promise.all), `assert()`, `delay(seconds)`, `random`, `nonNull()`, `zip()`, `DefaultMap`.
+
+## Additional
+
+- Never commit or expose any sensitive information (API keys, secrets, etc.) in code or environment files. Use .env.local with placeholders and add .env.local to .gitignore.

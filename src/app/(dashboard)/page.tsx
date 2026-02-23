@@ -41,6 +41,8 @@ export default async function OverviewPage() {
   const othersSd = activeSd.filter((sd) => sd.personId !== currentPersonId);
   const othersCount = new Set(othersSd.map((sd) => sd.personId)).size;
   const othersHours = othersSd.reduce((s, sd) => s + sd.hoursPerWeek, 0);
+  const othersHourlyPaid = othersSd.reduce((s, sd) => s + sd.hourlyPaid, 0);
+  const othersHourlyAccrued = othersSd.reduce((s, sd) => s + sd.hourlyInvested, 0);
   const othersWeeklyCost = othersSd.reduce((s, sd) => s + sd.hoursPerWeek * (sd.hourlyPaid + sd.hourlyInvested), 0);
   const myName = currentPersonId ? (people.find((p) => p.id === currentPersonId)?.name ?? "") : "";
 
@@ -110,8 +112,12 @@ export default async function OverviewPage() {
                     <tr className="border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors">
                       <td className="px-4 py-2 text-sm text-[var(--text-muted)]">Others ({othersCount})</td>
                       <td className="px-4 py-2 text-right text-sm font-mono text-[var(--text-muted)]">{othersHours}</td>
-                      <td className="px-4 py-2 text-right text-sm font-mono text-[var(--text-muted)]">—</td>
-                      <td className="px-4 py-2 text-right text-sm font-mono text-[var(--text-muted)]">—</td>
+                      <td className="px-4 py-2 text-right text-sm font-mono text-[var(--red)]">
+                        ${othersHourlyPaid}/hr
+                      </td>
+                      <td className="px-4 py-2 text-right text-sm font-mono text-[var(--orange)]">
+                        ${othersHourlyAccrued}/hr
+                      </td>
                       <td className="px-4 py-2 text-right text-sm font-mono font-bold text-[var(--text-muted)]">
                         ${othersWeeklyCost.toLocaleString()}
                       </td>

@@ -9,7 +9,6 @@ const links = [
   { href: "/", label: "Overview" },
   { href: "/transactions", label: "Transactions" },
   { href: "/revenue", label: "Revenue" },
-  { href: "/projections", label: "Projections" },
 ];
 
 interface NavProps {

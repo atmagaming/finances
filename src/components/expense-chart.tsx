@@ -2,29 +2,33 @@
 
 import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
+import { getLastConfirmedMonth } from "@/lib/calculations";
 import type { MonthlyExpense, ProjectionMonth } from "@/lib/types";
+import { formatMonthLabel, ResponsiveChart, tooltipContentStyle } from "./chart-base";
 
 interface MergedPoint {
   month: string;
-  // Historical (solid areas)
   paid: number | null;
   accrued: number | null;
   total: number | null;
-  // Projected (dashed areas)
   paidProj: number | null;
   accruedProj: number | null;
   totalProj: number | null;
 }
 
-function buildMerged(historical: MonthlyExpense[], projections: ProjectionMonth[], cumulative: boolean): MergedPoint[] {
+function buildMerged(
+  historical: MonthlyExpense[],
+  projections: ProjectionMonth[],
+  cumulative: boolean,
+  lastConfirmed: string,
+): MergedPoint[] {
   const sorted = [...historical].sort((a, b) => a.month.localeCompare(b.month));
-  const lastHistMonth = sorted.at(-1)?.month ?? "";
+  const confirmed = sorted.filter((h) => h.month <= lastConfirmed);
 
-  // Cumulative historical
   let paidCum = 0,
     accruedCum = 0;
   const histMap = new Map<string, { paid: number; accrued: number }>();
-  for (const h of sorted) {
+  for (const h of confirmed) {
     if (cumulative) {
       paidCum += h.paid;
       accruedCum += h.accrued;
@@ -35,7 +39,6 @@ function buildMerged(historical: MonthlyExpense[], projections: ProjectionMonth[
     histMap.set(h.month, { paid: paidCum, accrued: accruedCum });
   }
 
-  // Cumulative projected — continues from last historical cumulative
   const basePaid = cumulative ? paidCum : 0;
   const baseAccrued = cumulative ? accruedCum : 0;
   let projPaidCum = basePaid,
@@ -43,8 +46,6 @@ function buildMerged(historical: MonthlyExpense[], projections: ProjectionMonth[
   const projMap = new Map<string, { paid: number; accrued: number }>();
   const sortedProj = [...projections].sort((a, b) => a.month.localeCompare(b.month));
   for (const p of sortedProj) {
-    // Skip months already in historical
-    if (histMap.has(p.month)) continue;
     if (cumulative) {
       projPaidCum += p.paid;
       projAccruedCum += p.accrued;
@@ -60,24 +61,18 @@ function buildMerged(historical: MonthlyExpense[], projections: ProjectionMonth[
   return allMonths.map((month) => {
     const h = histMap.get(month) ?? null;
     const p = projMap.get(month) ?? null;
-    const isLastHist = month === lastHistMonth;
+    const isBoundary = month === lastConfirmed;
 
     return {
       month,
       paid: h?.paid ?? null,
       accrued: h?.accrued ?? null,
       total: h ? h.paid + h.accrued : null,
-      // Projected series starts at the last historical point for a visual connection
-      paidProj: p?.paid ?? (isLastHist && h ? h.paid : null),
-      accruedProj: p?.accrued ?? (isLastHist && h ? h.accrued : null),
-      totalProj: p ? p.paid + p.accrued : isLastHist && h ? h.paid + h.accrued : null,
+      paidProj: p?.paid ?? (isBoundary && h ? h.paid : null),
+      accruedProj: p?.accrued ?? (isBoundary && h ? h.accrued : null),
+      totalProj: p ? p.paid + p.accrued : isBoundary && h ? h.paid + h.accrued : null,
     };
   });
-}
-
-function formatMonthLabel(m: string): string {
-  const [year, month] = m.split("-").map(Number);
-  return new Date(year, month - 1, 1).toLocaleString("en-US", { month: "short", year: "numeric" });
 }
 
 function fmtValue(v: number): string {
@@ -115,24 +110,12 @@ export function ExpenseChart({
   projections: ProjectionMonth[];
 }) {
   const [cumulative, setCumulative] = useState(true);
+  const lastConfirmed = getLastConfirmedMonth();
 
-  const data = useMemo(() => buildMerged(historical, projections, cumulative), [historical, projections, cumulative]);
-
-  // Width: 80px per data point, min 900
-  const chartWidth = Math.max(900, data.length * 80);
-
-  // Find the boundary month label for the reference line
-  const boundaryMonth = [...historical].sort((a, b) => a.month.localeCompare(b.month)).at(-1)?.month;
-
-  const tooltipStyle = {
-    contentStyle: { background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 8 },
-    labelStyle: { color: "var(--text)" },
-    labelFormatter: (label: string) => formatMonthLabel(label),
-    formatter: (value: number, name: string) => {
-      const label = name.replace(" (proj)", " (projected)");
-      return [`$${value.toLocaleString()}`, label];
-    },
-  };
+  const data = useMemo(
+    () => buildMerged(historical, projections, cumulative, lastConfirmed),
+    [historical, projections, cumulative, lastConfirmed],
+  );
 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
@@ -152,12 +135,20 @@ export function ExpenseChart({
         </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <AreaChart width={chartWidth} height={400} data={data} margin={{ top: 24, right: 30, left: 0, bottom: 0 }}>
+      <ResponsiveChart minWidth={Math.max(900, data.length * 80)}>
+        <AreaChart data={data} margin={{ top: 24, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickFormatter={formatMonthLabel} />
           <YAxis stroke="var(--text-muted)" fontSize={12} tickFormatter={(v) => `$${v}`} />
-          <Tooltip {...tooltipStyle} />
+          <Tooltip
+            contentStyle={tooltipContentStyle}
+            labelStyle={{ color: "var(--text)" }}
+            labelFormatter={(label: string) => formatMonthLabel(label)}
+            formatter={(value: number, name: string) => {
+              const label = name.replace(" (proj)", " (projected)");
+              return [`$${value.toLocaleString()}`, label];
+            }}
+          />
           <Legend />
 
           {/* Historical — solid */}
@@ -228,17 +219,14 @@ export function ExpenseChart({
             )}
           />
 
-          {/* Vertical marker at current month boundary */}
-          {boundaryMonth && (
-            <ReferenceLine
-              x={boundaryMonth}
-              stroke="var(--text-muted)"
-              strokeDasharray="4 3"
-              label={{ value: "Today", position: "insideTopRight", fill: "var(--text-muted)", fontSize: 11 }}
-            />
-          )}
+          <ReferenceLine
+            x={lastConfirmed}
+            stroke="var(--text-muted)"
+            strokeDasharray="4 3"
+            label={{ value: "Today", position: "insideTopRight", fill: "var(--text-muted)", fontSize: 11 }}
+          />
         </AreaChart>
-      </div>
+      </ResponsiveChart>
     </div>
   );
 }
