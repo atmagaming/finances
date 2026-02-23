@@ -3,7 +3,14 @@
 import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
 import type { RevenueShare } from "@/lib/types";
-import { CHART_COLORS, formatMonthLabel, formatProjName, ResponsiveChart, tooltipContentStyle } from "./chart-base";
+import {
+  CHART_COLORS,
+  formatMonthLabel,
+  formatProjName,
+  quarterTicks,
+  ResponsiveChart,
+  tooltipContentStyle,
+} from "./chart-base";
 
 type ChartRow = Record<string, string | number | null>;
 
@@ -48,7 +55,13 @@ export function RevenueChart({ data }: { data: RevenueShare[] }) {
       <ResponsiveChart minWidth={Math.max(900, chartData.length * 16)}>
         <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-          <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickFormatter={formatMonthLabel} />
+          <XAxis
+            dataKey="month"
+            stroke="var(--text-muted)"
+            fontSize={12}
+            tickFormatter={formatMonthLabel}
+            ticks={quarterTicks(chartData.map((row) => row.month as string))}
+          />
           <YAxis stroke="var(--text-muted)" fontSize={12} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
           <Tooltip
             contentStyle={tooltipContentStyle}

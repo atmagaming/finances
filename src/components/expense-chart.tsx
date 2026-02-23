@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
 import { getLastConfirmedMonth } from "@/lib/calculations";
 import type { MonthlyExpense, ProjectionMonth } from "@/lib/types";
-import { formatMonthLabel, ResponsiveChart, tooltipContentStyle } from "./chart-base";
+import { formatMonthLabel, quarterTicks, ResponsiveChart, tooltipContentStyle } from "./chart-base";
 
 interface MergedPoint {
   month: string;
@@ -138,7 +138,13 @@ export function ExpenseChart({
       <ResponsiveChart minWidth={Math.max(900, data.length * 80)}>
         <AreaChart data={data} margin={{ top: 24, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-          <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickFormatter={formatMonthLabel} />
+          <XAxis
+            dataKey="month"
+            stroke="var(--text-muted)"
+            fontSize={12}
+            tickFormatter={formatMonthLabel}
+            ticks={quarterTicks(data.map((row) => row.month))}
+          />
           <YAxis stroke="var(--text-muted)" fontSize={12} tickFormatter={(v) => `$${v}`} />
           <Tooltip
             contentStyle={tooltipContentStyle}
