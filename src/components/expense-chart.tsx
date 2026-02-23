@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
-import { getLastConfirmedMonth } from "@/lib/calculations";
+import { getLastConfirmedMonth, getMonthRange } from "@/lib/calculations";
 import type { MonthlyExpense, ProjectionMonth } from "@/lib/types";
-import { formatMonthLabel, ResponsiveChart, tooltipContentStyle } from "./chart-base";
+import { chartTooltipContent, computeChartTicks, formatMonthLabel, ResponsiveChart } from "./chart-base";
 
 interface MergedPoint {
   month: string;
@@ -25,18 +25,24 @@ function buildMerged(
   const sorted = [...historical].sort((a, b) => a.month.localeCompare(b.month));
   const confirmed = sorted.filter((h) => h.month <= lastConfirmed);
 
+  const rawMap = new Map<string, { paid: number; accrued: number }>();
+  for (const h of confirmed) rawMap.set(h.month, { paid: h.paid, accrued: h.accrued });
+
   let paidCum = 0,
     accruedCum = 0;
   const histMap = new Map<string, { paid: number; accrued: number }>();
-  for (const h of confirmed) {
-    if (cumulative) {
-      paidCum += h.paid;
-      accruedCum += h.accrued;
-    } else {
-      paidCum = h.paid;
-      accruedCum = h.accrued;
+  if (confirmed.length > 0) {
+    for (const month of getMonthRange(confirmed[0].month, lastConfirmed)) {
+      const data = rawMap.get(month);
+      if (cumulative) {
+        paidCum += data?.paid ?? 0;
+        accruedCum += data?.accrued ?? 0;
+      } else {
+        paidCum = data?.paid ?? 0;
+        accruedCum = data?.accrued ?? 0;
+      }
+      histMap.set(month, { paid: paidCum, accrued: accruedCum });
     }
-    histMap.set(h.month, { paid: paidCum, accrued: accruedCum });
   }
 
   const basePaid = cumulative ? paidCum : 0;
@@ -56,7 +62,10 @@ function buildMerged(
     projMap.set(p.month, { paid: projPaidCum, accrued: projAccruedCum });
   }
 
-  const allMonths = [...new Set([...histMap.keys(), ...projMap.keys()])].sort();
+  const allKeys = [...histMap.keys(), ...projMap.keys()].sort();
+  const firstMonth = allKeys[0];
+  const lastMonth = allKeys[allKeys.length - 1];
+  const allMonths = firstMonth && lastMonth ? getMonthRange(firstMonth, lastMonth) : [];
 
   return allMonths.map((month) => {
     const h = histMap.get(month) ?? null;
@@ -116,11 +125,12 @@ export function ExpenseChart({
     () => buildMerged(historical, projections, cumulative, lastConfirmed),
     [historical, projections, cumulative, lastConfirmed],
   );
+  const ticks = useMemo(() => computeChartTicks(data.map((d) => d.month)), [data]);
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
+    <div className="rounded-xl bg-[var(--bg-card)] p-6" style={{ boxShadow: "var(--shadow)" }}>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Monthly Expenses (USD)</h2>
+        <h2 className="text-lg font-semibold">Expenses (USD)</h2>
         <button
           type="button"
           onClick={() => setCumulative((v) => !v)}
@@ -135,20 +145,18 @@ export function ExpenseChart({
         </button>
       </div>
 
-      <ResponsiveChart minWidth={Math.max(900, data.length * 80)}>
+      <ResponsiveChart minWidth={Math.max(900, data.length * 16)}>
         <AreaChart data={data} margin={{ top: 24, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-          <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickFormatter={formatMonthLabel} />
-          <YAxis stroke="var(--text-muted)" fontSize={12} tickFormatter={(v) => `$${v}`} />
-          <Tooltip
-            contentStyle={tooltipContentStyle}
-            labelStyle={{ color: "var(--text)" }}
-            labelFormatter={(label: string) => formatMonthLabel(label)}
-            formatter={(value: number, name: string) => {
-              const label = name.replace(" (proj)", " (projected)");
-              return [`$${value.toLocaleString()}`, label];
-            }}
+          <XAxis
+            dataKey="month"
+            ticks={ticks}
+            stroke="var(--text-muted)"
+            fontSize={12}
+            tickFormatter={formatMonthLabel}
           />
+          <YAxis stroke="var(--text-muted)" fontSize={12} tickFormatter={(v) => `$${v}`} />
+          <Tooltip content={chartTooltipContent((value, name) => [`$${value.toLocaleString()}`, name])} />
           <Legend />
 
           {/* Historical — solid */}
@@ -158,7 +166,7 @@ export function ExpenseChart({
             stackId="hist"
             stroke="var(--red)"
             fill="var(--red)"
-            fillOpacity={0.35}
+            fillOpacity={0.2}
             name="Paid"
             connectNulls={false}
             dot={{ r: 3, fill: "var(--red)", strokeWidth: 0 }}
@@ -169,7 +177,7 @@ export function ExpenseChart({
             stackId="hist"
             stroke="var(--orange)"
             fill="var(--orange)"
-            fillOpacity={0.35}
+            fillOpacity={0.2}
             name="Accrued"
             connectNulls={false}
             dot={{ r: 3, fill: "var(--orange)", strokeWidth: 0 }}
@@ -191,9 +199,10 @@ export function ExpenseChart({
             stackId="proj"
             stroke="var(--red)"
             fill="var(--red)"
-            fillOpacity={0.12}
+            fillOpacity={0.08}
             strokeDasharray="5 4"
             name="Paid (proj)"
+            legendType="none"
             connectNulls={false}
             dot={false}
           />
@@ -203,9 +212,10 @@ export function ExpenseChart({
             stackId="proj"
             stroke="var(--orange)"
             fill="var(--orange)"
-            fillOpacity={0.12}
+            fillOpacity={0.08}
             strokeDasharray="5 4"
             name="Accrued (proj)"
+            legendType="none"
             connectNulls={false}
             dot={false}
             label={(props: Record<string, unknown>) => (

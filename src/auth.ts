@@ -44,14 +44,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
     async jwt({ token, trigger }) {
-      if (trigger === "signIn" || trigger === "signUp") {
+      if (trigger === "signIn" || trigger === "signUp" || token.personId === undefined) {
         const email = token.email ?? "";
         try {
           const people = await getCachedPeople();
           token.personId = people.find((p) => p.notionEmail === email)?.id ?? null;
         } catch (e) {
-          console.error("Failed to resolve personId during login:", e);
-          token.personId = null;
+          console.error("Failed to resolve personId:", e);
+          token.personId = token.personId ?? null;
         }
       }
       return token;

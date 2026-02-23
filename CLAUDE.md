@@ -87,3 +87,4 @@ Utilities: `all()` (typed Promise.all), `assert()`, `delay(seconds)`, `random`, 
 ## Additional
 
 - Never commit or expose any sensitive information (API keys, secrets, etc.) in code or environment files. Use .env.local with placeholders and add .env.local to .gitignore.
+- Test code in browser using playwright to ensure it's working as expected

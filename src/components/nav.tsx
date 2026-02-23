@@ -8,7 +8,6 @@ import { signOut } from "next-auth/react";
 const links = [
   { href: "/", label: "Overview" },
   { href: "/transactions", label: "Transactions" },
-  { href: "/revenue", label: "Revenue" },
 ];
 
 interface NavProps {
@@ -21,9 +20,9 @@ export function Nav({ userName, userImage }: NavProps) {
   const isAuthenticated = !!userName;
 
   return (
-    <nav className="border-b border-[var(--border)] bg-[var(--bg-card)]">
+    <nav className="bg-[var(--bg-card)]" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
       <div className="mx-auto flex max-w-7xl items-center gap-8 px-4 py-3 sm:px-6 lg:px-8">
-        <Link href="/" className="text-lg font-semibold tracking-tight text-[var(--accent)]">
+        <Link href="/" className="text-lg font-bold tracking-tight text-[var(--accent)]">
           Atma Finances
         </Link>
         <div className="flex flex-1 gap-1">
@@ -31,9 +30,9 @@ export function Nav({ userName, userImage }: NavProps) {
             <Link
               key={link.href}
               href={link.href}
-              className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 pathname === link.href
-                  ? "bg-[var(--accent)] text-white"
+                  ? "bg-[var(--accent-light)] text-[var(--accent)]"
                   : "text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-card-hover)]"
               }`}
             >
@@ -44,12 +43,20 @@ export function Nav({ userName, userImage }: NavProps) {
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <>
-              {userImage && <Image src={userImage} alt={userName} width={28} height={28} className="rounded-full" />}
-              <span className="text-sm text-[var(--text-muted)]">{userName}</span>
+              {userImage && (
+                <Image
+                  src={userImage}
+                  alt={userName}
+                  width={32}
+                  height={32}
+                  className="rounded-full ring-2 ring-[var(--border)]"
+                />
+              )}
+              <span className="text-sm font-medium text-[var(--text)]">{userName}</span>
               <button
                 type="button"
                 onClick={() => void signOut({ callbackUrl: "/login" })}
-                className="rounded-md px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text)] hover:bg-[var(--bg-card-hover)]"
+                className="rounded-lg px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text)] hover:bg-[var(--bg-card-hover)]"
               >
                 Sign out
               </button>
@@ -57,7 +64,7 @@ export function Nav({ userName, userImage }: NavProps) {
           ) : (
             <Link
               href="/login"
-              className="rounded-md px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:text-[var(--text)] hover:bg-[var(--bg-card-hover)]"
+              className="rounded-lg bg-[var(--accent)] px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
             >
               Sign in
             </Link>

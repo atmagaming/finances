@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
 import type { InvestmentPoint } from "@/lib/types";
-import { CHART_COLORS, formatMonthLabel, formatProjName, ResponsiveChart, tooltipContentStyle } from "./chart-base";
+import { CHART_COLORS, chartTooltipContent, computeChartTicks, formatMonthLabel, ResponsiveChart } from "./chart-base";
 
 type ChartRow = Record<string, string | number | null>;
 
@@ -58,14 +58,16 @@ export function InvestmentChart({ data }: { data: InvestmentPoint[] }) {
   const allNames = useMemo(() => {
     const s = new Set<string>();
     for (const p of data) for (const n of Object.keys(p.values)) s.add(n);
-    return [...s].sort();
+    const latest = data.length > 0 ? data[data.length - 1].values : {};
+    return [...s].sort((a, b) => (latest[b] ?? 0) - (latest[a] ?? 0));
   }, [data]);
 
   const chartData = useMemo(() => buildChartData(data, allNames, cumulative), [data, allNames, cumulative]);
+  const ticks = useMemo(() => computeChartTicks(chartData.map((d) => d.month as string)), [chartData]);
   const boundaryMonth = [...data].reverse().find((t) => !t.isProjected)?.month;
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
+    <div className="rounded-xl bg-[var(--bg-card)] p-6" style={{ boxShadow: "var(--shadow)" }}>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Investments Over Time (USD)</h2>
         <button
@@ -84,15 +86,16 @@ export function InvestmentChart({ data }: { data: InvestmentPoint[] }) {
       <ResponsiveChart minWidth={Math.max(900, chartData.length * 16)}>
         <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-          <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickFormatter={formatMonthLabel} />
-          <YAxis stroke="var(--text-muted)" fontSize={12} tickFormatter={(v) => `$${v}`} />
-          <Tooltip
-            contentStyle={tooltipContentStyle}
-            labelStyle={{ color: "var(--text)" }}
-            labelFormatter={(label) => formatMonthLabel(label)}
-            formatter={(value: number, name: string) => [`$${value.toLocaleString()}`, formatProjName(name)]}
+          <XAxis
+            dataKey="month"
+            ticks={ticks}
+            stroke="var(--text-muted)"
+            fontSize={12}
+            tickFormatter={formatMonthLabel}
           />
-          <Legend formatter={formatProjName} />
+          <YAxis stroke="var(--text-muted)" fontSize={12} tickFormatter={(v) => `$${v}`} />
+          <Tooltip content={chartTooltipContent((value, name) => [`$${value.toLocaleString()}`, name])} />
+          <Legend />
 
           {allNames.map((name, i) => {
             const color = CHART_COLORS[i % CHART_COLORS.length];
@@ -104,7 +107,7 @@ export function InvestmentChart({ data }: { data: InvestmentPoint[] }) {
                 stackId="hist"
                 stroke={color}
                 fill={color}
-                fillOpacity={0.4}
+                fillOpacity={0.25}
                 connectNulls={false}
                 dot={false}
               />,
@@ -115,8 +118,9 @@ export function InvestmentChart({ data }: { data: InvestmentPoint[] }) {
                 stackId="proj"
                 stroke={color}
                 fill={color}
-                fillOpacity={0.15}
+                fillOpacity={0.1}
                 strokeDasharray="5 4"
+                legendType="none"
                 connectNulls={false}
                 dot={false}
               />,

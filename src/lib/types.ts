@@ -30,6 +30,9 @@ export interface SensitiveData {
   hourlyInvested: number;
   schedule: number[];
   hoursPerWeek: number;
+  monthlyPaid: number;
+  monthlyInvested: number;
+  monthlyTotal: number;
   startDate: string | null;
   endDate: string | null;
   status: string;

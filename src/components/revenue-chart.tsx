@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
 import type { RevenueShare } from "@/lib/types";
-import { CHART_COLORS, formatMonthLabel, formatProjName, ResponsiveChart, tooltipContentStyle } from "./chart-base";
+import { CHART_COLORS, chartTooltipContent, computeChartTicks, formatMonthLabel, ResponsiveChart } from "./chart-base";
 
 type ChartRow = Record<string, string | number | null>;
 
@@ -36,27 +36,31 @@ export function RevenueChart({ data }: { data: RevenueShare[] }) {
   const names = useMemo(() => {
     const allNames = new Set<string>();
     for (const entry of data) for (const name of Object.keys(entry.shares)) allNames.add(name);
-    return [...allNames].sort();
+    // Sort by latest share descending so largest is at the bottom of the stack
+    const latest = data.length > 0 ? data[data.length - 1].shares : {};
+    return [...allNames].sort((a, b) => (latest[b] ?? 0) - (latest[a] ?? 0));
   }, [data]);
 
   const chartData = useMemo(() => buildChartData(data, names), [data, names]);
+  const ticks = useMemo(() => computeChartTicks(chartData.map((d) => d.month as string)), [chartData]);
   const boundaryMonth = [...data].reverse().find((entry) => !entry.isProjected)?.month;
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
+    <div className="rounded-xl bg-[var(--bg-card)] p-6" style={{ boxShadow: "var(--shadow)" }}>
       <h2 className="mb-4 text-lg font-semibold">Revenue Share Over Time (%)</h2>
       <ResponsiveChart minWidth={Math.max(900, chartData.length * 16)}>
         <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-          <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickFormatter={formatMonthLabel} />
-          <YAxis stroke="var(--text-muted)" fontSize={12} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
-          <Tooltip
-            contentStyle={tooltipContentStyle}
-            labelStyle={{ color: "var(--text)" }}
-            labelFormatter={(label) => formatMonthLabel(label)}
-            formatter={(value: number, name: string) => [`${value.toFixed(1)}%`, formatProjName(name)]}
+          <XAxis
+            dataKey="month"
+            ticks={ticks}
+            stroke="var(--text-muted)"
+            fontSize={12}
+            tickFormatter={formatMonthLabel}
           />
-          <Legend formatter={formatProjName} />
+          <YAxis stroke="var(--text-muted)" fontSize={12} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
+          <Tooltip content={chartTooltipContent((value, name) => [`${value.toFixed(1)}%`, name])} />
+          <Legend />
 
           {names.map((name, i) => {
             const color = CHART_COLORS[i % CHART_COLORS.length];
@@ -68,7 +72,7 @@ export function RevenueChart({ data }: { data: RevenueShare[] }) {
                 stackId="hist"
                 stroke={color}
                 fill={color}
-                fillOpacity={0.4}
+                fillOpacity={0.25}
                 connectNulls={false}
                 dot={false}
               />,
@@ -79,8 +83,9 @@ export function RevenueChart({ data }: { data: RevenueShare[] }) {
                 stackId="proj"
                 stroke={color}
                 fill={color}
-                fillOpacity={0.15}
+                fillOpacity={0.1}
                 strokeDasharray="5 4"
+                legendType="none"
                 connectNulls={false}
                 dot={false}
               />,

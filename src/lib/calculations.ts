@@ -8,7 +8,7 @@ import type {
 } from "./types";
 
 /** Count Mondays (sprint starts) in a given month */
-function countMondaysInMonth(year: number, month: number): number {
+export function countMondaysInMonth(year: number, month: number): number {
   let count = 0;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   for (let day = 1; day <= daysInMonth; day++) {
@@ -35,6 +35,8 @@ function addMonths(monthStr: string, n: number): string {
   return formatMonth(d.getFullYear(), d.getMonth());
 }
 
+export const RELEASE_MONTH = "2027-10";
+
 const PAYMENT_CUTOFF_DAY = 10;
 
 /** Last month whose payments are fully confirmed (paid by the 10th of the following month) */
@@ -46,7 +48,7 @@ export function getLastConfirmedMonth(): string {
 }
 
 /** Get all months between two YYYY-MM strings, inclusive */
-function getMonthRange(start: string, end: string): string[] {
+export function getMonthRange(start: string, end: string): string[] {
   const months: string[] = [];
   let current = start;
   while (current <= end) {
@@ -87,12 +89,14 @@ export function aggregateExpensesByMonth(transactions: Transaction[]): MonthlyEx
 }
 
 /** Project future expenses based on active people's rates */
-export function projectExpenses(sensitiveData: SensitiveData[], monthsAhead: number): ProjectionMonth[] {
+export function projectExpenses(sensitiveData: SensitiveData[], endMonth: string): ProjectionMonth[] {
   const firstUnconfirmed = addMonths(getLastConfirmedMonth(), 1);
+  if (firstUnconfirmed > endMonth) return [];
+
+  const months = getMonthRange(firstUnconfirmed, endMonth);
   const projections: ProjectionMonth[] = [];
 
-  for (let i = 0; i < monthsAhead; i++) {
-    const monthStr = addMonths(firstUnconfirmed, i);
+  for (const monthStr of months) {
     const [year, month] = parseMonth(monthStr);
     const mondays = countMondaysInMonth(year, month);
 
@@ -128,6 +132,7 @@ export function calculateRevenueShares(
   sensitiveData: SensitiveData[],
   payeePersonMap: Map<string, string>,
   personNames: Map<string, string>,
+  endMonth: string,
 ): RevenueShare[] {
   // Build a map of person -> cumulative investment over time (month by month)
   // Investments = direct cash investments (from transactions) + accrued salary over time
@@ -140,8 +145,7 @@ export function calculateRevenueShares(
     .map((t) => t.logicalDate)
     .sort();
   const firstMonth = sortedDates[0].slice(0, 7);
-  const futureMonth = addMonths(getLastConfirmedMonth(), 36);
-  const months = getMonthRange(firstMonth, futureMonth);
+  const months = getMonthRange(firstMonth, endMonth);
 
   // Track cumulative investments per person
   const cumulativeInvestments = new Map<string, number>();
@@ -226,7 +230,7 @@ export function calculateInvestmentTimeline(
   sensitiveData: SensitiveData[],
   payeePersonMap: Map<string, string>,
   personNames: Map<string, string>,
-  monthsAhead = 18,
+  endMonth: string,
 ): InvestmentPoint[] {
   if (transactions.length === 0) return [];
 
@@ -236,8 +240,7 @@ export function calculateInvestmentTimeline(
     .sort();
   const firstMonth = sortedDates[0].slice(0, 7);
   const lastConfirmed = getLastConfirmedMonth();
-  const futureMonth = addMonths(lastConfirmed, monthsAhead);
-  const months = getMonthRange(firstMonth, futureMonth);
+  const months = getMonthRange(firstMonth, endMonth);
 
   // Pre-group per-month increments by person
   const accruedByMonth = new Map<string, Map<string, number>>();

@@ -58,15 +58,21 @@ export default function LoginPage() {
   const title = mode === "login" ? "Sign In" : mode === "register" ? "Create Account" : "Reset Password";
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-8 w-full max-w-sm space-y-6">
+    <div
+      className="flex min-h-screen items-center justify-center"
+      style={{ background: "linear-gradient(135deg, #f0f4ff 0%, #f8f9fb 50%, #fdf2f8 100%)" }}
+    >
+      <div
+        className="rounded-2xl bg-[var(--bg-card)] p-8 w-full max-w-sm space-y-6"
+        style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
+      >
         <div className="space-y-1">
           <h1 className="text-xl font-bold text-[var(--accent)]">Atma Finances</h1>
           <p className="text-sm text-[var(--text-muted)]">{title}</p>
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
-        {success && <p className="text-sm text-green-500">{success}</p>}
+        {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+        {success && <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">{success}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "register" && (
@@ -75,7 +81,7 @@ export default function LoginPage() {
               placeholder="Name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2.5 text-sm transition-colors focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
             />
           )}
           <input
@@ -84,7 +90,7 @@ export default function LoginPage() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
-            className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2.5 text-sm transition-colors focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
           />
           {mode !== "forgot-password" && (
             <input
@@ -94,13 +100,13 @@ export default function LoginPage() {
               onChange={(event) => setPassword(event.target.value)}
               required
               minLength={8}
-              className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2.5 text-sm transition-colors focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
             />
           )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-50"
           >
             {loading ? "..." : title}
           </button>
@@ -119,7 +125,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => signIn("google", { callbackUrl: "/" })}
-              className="w-full rounded-lg border border-[var(--border)] px-4 py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5 text-sm font-medium transition-colors hover:bg-[var(--bg-card-hover)]"
             >
               Sign in with Google
             </button>
@@ -129,10 +135,18 @@ export default function LoginPage() {
         <div className="flex justify-between text-xs text-[var(--text-muted)]">
           {mode === "login" && (
             <>
-              <button type="button" onClick={() => setMode("register")} className="hover:underline">
+              <button
+                type="button"
+                onClick={() => setMode("register")}
+                className="hover:text-[var(--accent)] transition-colors"
+              >
                 Create account
               </button>
-              <button type="button" onClick={() => setMode("forgot-password")} className="hover:underline">
+              <button
+                type="button"
+                onClick={() => setMode("forgot-password")}
+                className="hover:text-[var(--accent)] transition-colors"
+              >
                 Forgot password?
               </button>
             </>
@@ -145,7 +159,7 @@ export default function LoginPage() {
                 setError("");
                 setSuccess("");
               }}
-              className="hover:underline"
+              className="hover:text-[var(--accent)] transition-colors"
             >
               Back to sign in
             </button>

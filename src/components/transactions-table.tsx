@@ -52,15 +52,15 @@ export function TransactionsTable({
   };
 
   const headerClass =
-    "cursor-pointer select-none px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)] hover:text-[var(--text)]";
+    "cursor-pointer select-none px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)] hover:text-[var(--text)] transition-colors";
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)]">
+    <div className="rounded-xl bg-[var(--bg-card)]" style={{ boxShadow: "var(--shadow)" }}>
       <div className="flex gap-4 border-b border-[var(--border)] p-4">
         <select
           value={methodFilter}
           onChange={(e) => setMethodFilter(e.target.value)}
-          className="rounded-md border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-sm text-[var(--text)]"
+          className="rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-sm text-[var(--text)]"
         >
           <option value="all">All Methods</option>
           {methods.map((m) => (
@@ -72,7 +72,7 @@ export function TransactionsTable({
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="rounded-md border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-sm text-[var(--text)]"
+          className="rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-sm text-[var(--text)]"
         >
           <option value="all">All Categories</option>
           {categories.map((c) => (
@@ -90,7 +90,7 @@ export function TransactionsTable({
               <th className={headerClass} onClick={() => toggleSort("logicalDate")}>
                 Date {sortField === "logicalDate" ? (sortDir === "asc" ? "^" : "v") : ""}
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
+              <th className="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">
                 Description
               </th>
               {showPayee && (
@@ -115,25 +115,25 @@ export function TransactionsTable({
                 key={tx.id}
                 className="border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors"
               >
-                <td className="whitespace-nowrap px-3 py-2 text-sm">{tx.logicalDate}</td>
-                <td className="px-3 py-2 text-sm max-w-xs truncate">{tx.note}</td>
-                {showPayee && <td className="px-3 py-2 text-sm">{tx.payeeName}</td>}
-                <td className="px-3 py-2 text-sm">{tx.category}</td>
-                <td className="px-3 py-2 text-sm">
+                <td className="whitespace-nowrap px-3 py-2.5 text-sm">{tx.logicalDate}</td>
+                <td className="px-3 py-2.5 text-sm max-w-xs truncate">{tx.note}</td>
+                {showPayee && <td className="px-3 py-2.5 text-sm">{tx.payeeName}</td>}
+                <td className="px-3 py-2.5 text-sm">{tx.category}</td>
+                <td className="px-3 py-2.5 text-sm">
                   <span
-                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                    className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
                       tx.method === "Paid"
-                        ? "bg-red-500/20 text-red-400"
+                        ? "bg-red-50 text-red-700"
                         : tx.method === "Accrued"
-                          ? "bg-orange-500/20 text-orange-400"
-                          : "bg-purple-500/20 text-purple-400"
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-violet-50 text-violet-700"
                     }`}
                   >
                     {tx.method}
                   </span>
                 </td>
                 <td
-                  className={`whitespace-nowrap px-3 py-2 text-sm font-mono ${tx.usdEquivalent > 0 ? "text-[var(--green)]" : "text-[var(--red)]"}`}
+                  className={`whitespace-nowrap px-3 py-2.5 text-sm font-mono ${tx.usdEquivalent > 0 ? "text-[var(--green)]" : "text-[var(--red)]"}`}
                 >
                   ${Math.abs(tx.usdEquivalent).toLocaleString()}
                 </td>
