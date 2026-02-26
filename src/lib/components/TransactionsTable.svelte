@@ -1,13 +1,8 @@
 <script lang="ts">
   import type { Transaction } from "$lib/types";
-  import Select from "$lib/components/ui/select.svelte";
-  import Table from "$lib/components/ui/table.svelte";
-  import TableHeader from "$lib/components/ui/table-header.svelte";
-  import TableBody from "$lib/components/ui/table-body.svelte";
-  import TableRow from "$lib/components/ui/table-row.svelte";
-  import TableHead from "$lib/components/ui/table-head.svelte";
-  import TableCell from "$lib/components/ui/table-cell.svelte";
-  import Badge from "$lib/components/ui/badge.svelte";
+  import NativeSelect from "$lib/components/ui/native-select.svelte";
+  import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/index.js";
+  import { Badge } from "$lib/components/ui/badge/index.js";
 
   export let transactions: Transaction[] = [];
   export let highlightPayeeIds: string[] = [];
@@ -53,26 +48,26 @@
   }
 </script>
 
-<div class="rounded-xl bg-(--bg-card)" style="box-shadow: var(--shadow)">
-  <div class="flex gap-4 border-b border-(--border) p-4">
-    <Select bind:value={methodFilter}>
+<div class="rounded-xl border border-border bg-card shadow-sm">
+  <div class="flex flex-wrap gap-3 border-b border-border p-4">
+    <NativeSelect bind:value={methodFilter}>
       <option value="all">All Methods</option>
-      {#each methods as m}
-        <option value={m}>{m}</option>
+      {#each methods as method}
+        <option value={method}>{method}</option>
       {/each}
-    </Select>
-    <Select bind:value={categoryFilter}>
+    </NativeSelect>
+    <NativeSelect bind:value={categoryFilter}>
       <option value="all">All Categories</option>
-      {#each categories as c}
-        <option value={c}>{c}</option>
+      {#each categories as category}
+        <option value={category}>{category}</option>
       {/each}
-    </Select>
-    <span class="ml-auto self-center text-sm text-(--text-muted)">{filtered.length} transactions</span>
+    </NativeSelect>
+    <span class="ml-auto self-center text-sm text-muted-foreground">{filtered.length} transactions</span>
   </div>
 
   <Table>
     <TableHeader>
-      <TableRow className="border-b border-(--border) hover:bg-transparent">
+      <TableRow class="border-b border-border hover:bg-transparent">
         <TableHead>Date</TableHead>
         <TableHead>Description</TableHead>
         <TableHead>Payee</TableHead>
@@ -84,47 +79,42 @@
     <TableBody>
       {#each filtered as tx (tx.id)}
         <TableRow
-          className={
-            highlightSet.has(tx.payeeId)
-              ? "bg-(--accent-light)"
-              : maskedSet.has(tx.payeeId)
-                ? "bg-(--bg-card-hover)"
-                : ""
-          }
+          class={highlightSet.has(tx.payeeId)
+            ? "bg-primary/5"
+            : maskedSet.has(tx.payeeId)
+              ? "bg-muted/40"
+              : ""}
         >
-          <TableCell className="whitespace-nowrap px-3 py-2.5 text-sm">{formatDate(tx.logicalDate)}</TableCell>
+          <TableCell class="whitespace-nowrap px-3 py-2.5 text-sm">{formatDate(tx.logicalDate)}</TableCell>
           <TableCell
-            className={`max-w-xs truncate px-3 py-2.5 text-sm ${
-              maskedSet.has(tx.payeeId) ? "text-(--text-muted)" : ""
-            }`}
+            class={`max-w-xs truncate px-3 py-2.5 text-sm ${maskedSet.has(tx.payeeId) ? "text-muted-foreground" : ""}`}
           >
             {tx.note}
           </TableCell>
-          <TableCell className={`px-3 py-2.5 text-sm ${maskedSet.has(tx.payeeId) ? "text-(--text-muted)" : ""}`}>
+          <TableCell class={`px-3 py-2.5 text-sm ${maskedSet.has(tx.payeeId) ? "text-muted-foreground" : ""}`}>
             {tx.payeeName}
           </TableCell>
-          <TableCell className={`px-3 py-2.5 text-sm ${maskedSet.has(tx.payeeId) ? "text-(--text-muted)" : ""}`}>
+          <TableCell class={`px-3 py-2.5 text-sm ${maskedSet.has(tx.payeeId) ? "text-muted-foreground" : ""}`}>
             {tx.category}
           </TableCell>
-          <TableCell className="px-3 py-2.5 text-sm">
+          <TableCell class="px-3 py-2.5 text-sm">
             <Badge
-              variant={
-                tx.method === "Paid" ? "danger" : tx.method === "Accrued" ? "warning" : "info"
-              }
+              variant={tx.method === "Paid" ? "destructive" : tx.method === "Accrued" ? "outline" : "secondary"}
+              class={tx.method === "Accrued" ? "border-amber-400 bg-amber-50 text-amber-700" : tx.method === "Invested" ? "bg-violet-50 text-violet-700 border-violet-200" : ""}
             >
               {tx.method}
             </Badge>
           </TableCell>
           <TableCell
-            className={`whitespace-nowrap px-3 py-2.5 text-sm font-mono ${
+            class={`whitespace-nowrap px-3 py-2.5 text-sm font-mono ${
               maskedSet.has(tx.payeeId)
-                ? "cursor-help text-(--text-muted)"
+                ? "cursor-help text-muted-foreground"
                 : tx.usdEquivalent > 0
-                  ? "text-(--green)"
-                  : "text-(--red)"
+                  ? "text-[var(--green)]"
+                  : "text-[var(--red)]"
             }`}
-            on:mouseenter={maskedSet.has(tx.payeeId) ? showTooltip : undefined}
-            on:mouseleave={maskedSet.has(tx.payeeId) ? hideTooltip : undefined}
+            onmouseenter={maskedSet.has(tx.payeeId) ? showTooltip : undefined}
+            onmouseleave={maskedSet.has(tx.payeeId) ? hideTooltip : undefined}
           >
             {#if maskedSet.has(tx.payeeId)}
               <img src="/question.png" alt="Hidden" width="16" height="16" class="inline opacity-40" />
@@ -140,7 +130,7 @@
 
 {#if tooltip}
   <div
-    class="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded bg-gray-800 px-2.5 py-1.5 text-xs text-white shadow-lg"
+    class="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-md bg-gray-900 px-2.5 py-1.5 text-xs text-white shadow-lg"
     style={`left: ${tooltip.x}px; top: ${tooltip.y - 6}px;`}
   >
     Other team members' salaries are hidden

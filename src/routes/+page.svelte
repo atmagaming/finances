@@ -11,7 +11,10 @@
 
 {#if dashboard}
   <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-(--text)">Financial Overview</h1>
+    <div>
+      <h1 class="text-2xl font-bold text-foreground">Financial Overview</h1>
+      <p class="mt-1 text-sm text-muted-foreground">Track your team's financial performance and projections.</p>
+    </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
       {#each dashboard.cards as card (card.label)}

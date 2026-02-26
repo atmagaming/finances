@@ -1,10 +1,5 @@
 <script lang="ts">
-  import Table from "$lib/components/ui/table.svelte";
-  import TableHeader from "$lib/components/ui/table-header.svelte";
-  import TableBody from "$lib/components/ui/table-body.svelte";
-  import TableRow from "$lib/components/ui/table-row.svelte";
-  import TableHead from "$lib/components/ui/table-head.svelte";
-  import TableCell from "$lib/components/ui/table-cell.svelte";
+  import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "$lib/components/ui/table/index.js";
 
   interface TableRowData {
     personId: string;
@@ -51,161 +46,163 @@
   $: teamAgg = aggregateRows(rows);
 </script>
 
-<div class="rounded-xl bg-(--bg-card) p-6" style="box-shadow: var(--shadow)">
-  <h2 class="mb-4 text-lg font-semibold">Active Team Breakdown</h2>
+<div class="rounded-xl border border-border bg-card shadow-sm">
+  <div class="border-b border-border px-6 py-4">
+    <h2 class="text-base font-semibold text-foreground">Active Team Breakdown</h2>
+  </div>
   <Table>
     <TableHeader>
-      <TableRow className="border-b border-(--border) hover:bg-transparent">
-        <TableHead className="px-4 py-3 text-left">Person</TableHead>
-        <TableHead className="px-4 py-3 text-right">Hours/Week</TableHead>
-        <TableHead className="px-4 py-3 text-right">Paid $/hr</TableHead>
-        <TableHead className="px-4 py-3 text-right">Invested $/hr</TableHead>
-        <TableHead className="px-4 py-3 text-right">Monthly Paid</TableHead>
-        <TableHead className="px-4 py-3 text-right">Monthly Accrued</TableHead>
-        <TableHead className="px-4 py-3 text-right">Monthly Total</TableHead>
-        <TableHead className="px-4 py-3 text-right">Current Investment</TableHead>
-        <TableHead className="px-4 py-3 text-right">Current Share</TableHead>
-        <TableHead className="px-4 py-3 text-right">Projected Share (Oct 2027)</TableHead>
+      <TableRow class="border-b border-border hover:bg-transparent">
+        <TableHead class="px-4 py-3 text-left">Person</TableHead>
+        <TableHead class="px-4 py-3 text-right">Hours/Week</TableHead>
+        <TableHead class="px-4 py-3 text-right">Paid $/hr</TableHead>
+        <TableHead class="px-4 py-3 text-right">Invested $/hr</TableHead>
+        <TableHead class="px-4 py-3 text-right">Monthly Paid</TableHead>
+        <TableHead class="px-4 py-3 text-right">Monthly Accrued</TableHead>
+        <TableHead class="px-4 py-3 text-right">Monthly Total</TableHead>
+        <TableHead class="px-4 py-3 text-right">Current Investment</TableHead>
+        <TableHead class="px-4 py-3 text-right">Current Share</TableHead>
+        <TableHead class="px-4 py-3 text-right">Projected Share (Oct 2027)</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
       {#if isAdmin}
         {#each rows as row (row.personId)}
-          <TableRow className={row.isCurrentUser ? "bg-(--accent-light)" : ""}>
-            <TableCell className="px-4 py-3 text-sm font-medium">
+          <TableRow class={row.isCurrentUser ? "bg-primary/5" : ""}>
+            <TableCell class="px-4 py-3 text-sm font-medium">
               {row.isCurrentUser ? `${row.name} (You)` : row.name}
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono">{row.hoursPerWeek}</TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--red)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono">{row.hoursPerWeek}</TableCell>
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--red)]">
               ${Math.round(row.paidRate)}/hr
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--orange)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--orange)]">
               ${Math.round(row.investedRate)}/hr
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono">${row.monthlyPaid.toLocaleString()}</TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono">${row.monthlyAccrued.toLocaleString()}</TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono font-bold">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono">${row.monthlyPaid.toLocaleString()}</TableCell>
+            <TableCell class="px-4 py-3 text-right text-sm font-mono">${row.monthlyAccrued.toLocaleString()}</TableCell>
+            <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold">
               ${row.monthlyTotal.toLocaleString()}
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono">
               ${row.currentInvestment.toLocaleString()}
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono font-bold text-(--accent)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold text-primary">
               {row.currentShare.toFixed(1)}%
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--accent)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-primary">
               {row.projectedShare.toFixed(1)}%
             </TableCell>
           </TableRow>
         {/each}
       {:else if isAuthenticated}
         {#each myRows as row (row.personId)}
-          <TableRow className="bg-(--accent-light)">
-            <TableCell className="px-4 py-3 text-sm font-medium">{row.name} (You)</TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono">{row.hoursPerWeek}</TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--red)">
+          <TableRow class="bg-primary/5">
+            <TableCell class="px-4 py-3 text-sm font-medium">{row.name} (You)</TableCell>
+            <TableCell class="px-4 py-3 text-right text-sm font-mono">{row.hoursPerWeek}</TableCell>
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--red)]">
               ${Math.round(row.paidRate)}/hr
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--orange)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--orange)]">
               ${Math.round(row.investedRate)}/hr
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono">${row.monthlyPaid.toLocaleString()}</TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono">${row.monthlyAccrued.toLocaleString()}</TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono font-bold">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono">${row.monthlyPaid.toLocaleString()}</TableCell>
+            <TableCell class="px-4 py-3 text-right text-sm font-mono">${row.monthlyAccrued.toLocaleString()}</TableCell>
+            <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold">
               ${row.monthlyTotal.toLocaleString()}
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono">
               ${row.currentInvestment.toLocaleString()}
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono font-bold text-(--accent)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold text-primary">
               {row.currentShare.toFixed(1)}%
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--accent)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-primary">
               {row.projectedShare.toFixed(1)}%
             </TableCell>
           </TableRow>
         {/each}
         {#if otherRows.length > 0}
           <TableRow>
-            <TableCell className="px-4 py-3 text-sm font-medium text-(--text-muted)">
+            <TableCell class="px-4 py-3 text-sm font-medium text-muted-foreground">
               Others ({othersCount})
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--text-muted)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-muted-foreground">
               {othersAgg.hoursPerWeek}
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--red)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--red)]">
               ${Math.round(othersAgg.paidRate)}/hr
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--orange)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--orange)]">
               ${Math.round(othersAgg.investedRate)}/hr
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--text-muted)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-muted-foreground">
               ${othersAgg.monthlyPaid.toLocaleString()}
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--text-muted)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-muted-foreground">
               ${othersAgg.monthlyAccrued.toLocaleString()}
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono font-bold">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold">
               ${othersAgg.monthlyTotal.toLocaleString()}
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--text-muted)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-muted-foreground">
               ${othersAgg.currentInvestment.toLocaleString()}
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono font-bold text-(--accent)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold text-primary">
               {othersAgg.currentShare.toFixed(1)}%
             </TableCell>
-            <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--accent)">
+            <TableCell class="px-4 py-3 text-right text-sm font-mono text-primary">
               {othersAgg.projectedShare.toFixed(1)}%
             </TableCell>
           </TableRow>
         {/if}
       {:else}
         <TableRow>
-          <TableCell className="px-4 py-3 text-sm font-medium">Team ({teamCount})</TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono">{teamAgg.hoursPerWeek}</TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--red)">
+          <TableCell class="px-4 py-3 text-sm font-medium">Team ({teamCount})</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono">{teamAgg.hoursPerWeek}</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--red)]">
             ${Math.round(teamAgg.paidRate)}/hr
           </TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--orange)">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--orange)]">
             ${Math.round(teamAgg.investedRate)}/hr
           </TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyPaid.toLocaleString()}</TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyAccrued.toLocaleString()}</TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono font-bold">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyPaid.toLocaleString()}</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyAccrued.toLocaleString()}</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold">
             ${teamAgg.monthlyTotal.toLocaleString()}
           </TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono">
             ${teamAgg.currentInvestment.toLocaleString()}
           </TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono font-bold text-(--accent)">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold text-primary">
             {teamAgg.currentShare.toFixed(1)}%
           </TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--accent)">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono text-primary">
             {teamAgg.projectedShare.toFixed(1)}%
           </TableCell>
         </TableRow>
       {/if}
 
       {#if isAuthenticated}
-        <TableRow className="border-t-2 border-t-(--text-muted) bg-(--bg-card-hover) font-semibold">
-          <TableCell className="px-4 py-3 text-sm font-medium">Total ({teamCount})</TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono">{teamAgg.hoursPerWeek}</TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--red)">
+        <TableRow class="border-t-2 border-t-border bg-muted/50 font-semibold">
+          <TableCell class="px-4 py-3 text-sm font-semibold">Total ({teamCount})</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono">{teamAgg.hoursPerWeek}</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--red)]">
             ${teamAgg.paidRate}/hr
           </TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--orange)">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono text-[var(--orange)]">
             ${teamAgg.investedRate}/hr
           </TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyPaid.toLocaleString()}</TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyAccrued.toLocaleString()}</TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono font-bold">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyPaid.toLocaleString()}</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.monthlyAccrued.toLocaleString()}</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold">
             ${teamAgg.monthlyTotal.toLocaleString()}
           </TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono">${teamAgg.currentInvestment.toLocaleString()}</TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono font-bold text-(--accent)">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono">${teamAgg.currentInvestment.toLocaleString()}</TableCell>
+          <TableCell class="px-4 py-3 text-right text-sm font-mono font-bold text-primary">
             {teamAgg.currentShare.toFixed(1)}%
           </TableCell>
-          <TableCell className="px-4 py-3 text-right text-sm font-mono text-(--accent)">
+          <TableCell class="px-4 py-3 text-right text-sm font-mono text-primary">
             {teamAgg.projectedShare.toFixed(1)}%
           </TableCell>
         </TableRow>

@@ -2,7 +2,7 @@
   import type { ChartSeries, MonthlyExpense, ProjectionMonth } from "$lib/types";
   import { getLastConfirmedMonth, getMonthRange } from "$lib/date";
   import StackedAreaChart from "$lib/components/charts/StackedAreaChart.svelte";
-  import Button from "$lib/components/ui/button.svelte";
+  import { Button } from "$lib/components/ui/button/index.js";
 
   export let historical: MonthlyExpense[] = [];
   export let projections: ProjectionMonth[] = [];
@@ -111,7 +111,7 @@
   showTotalLabels={true}
 >
   <svelte:fragment slot="actions">
-    <Button variant="outline" size="sm" on:click={() => (cumulative = !cumulative)}>
+    <Button variant="outline" size="sm" onclick={() => (cumulative = !cumulative)}>
       Cumulative
     </Button>
   </svelte:fragment>

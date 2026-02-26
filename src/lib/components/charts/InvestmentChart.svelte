@@ -2,7 +2,7 @@
   import type { ChartSeries, InvestmentPoint } from "$lib/types";
   import { CHART_COLORS } from "$lib/charts";
   import StackedAreaChart from "$lib/components/charts/StackedAreaChart.svelte";
-  import Button from "$lib/components/ui/button.svelte";
+  import { Button } from "$lib/components/ui/button/index.js";
 
   export let data: InvestmentPoint[] = [];
 
@@ -67,7 +67,7 @@
 
 <StackedAreaChart title="Investments Over Time (USD)" {months} {series} lastHistMonth={lastHistMonth}>
   <svelte:fragment slot="actions">
-    <Button variant="outline" size="sm" on:click={() => (cumulative = !cumulative)}>
+    <Button variant="outline" size="sm" onclick={() => (cumulative = !cumulative)}>
       Cumulative
     </Button>
   </svelte:fragment>
