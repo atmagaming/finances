@@ -1,7 +1,7 @@
 import { defineConfig } from "prisma/config";
 
-const tursoUrl = process.env.NUXT_TURSO_DATABASE_URL;
-const tursoToken = process.env.NUXT_TURSO_AUTH_TOKEN;
+const tursoUrl = process.env.TURSO_DATABASE_URL;
+const tursoToken = process.env.TURSO_AUTH_TOKEN;
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

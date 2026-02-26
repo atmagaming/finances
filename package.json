@@ -2,11 +2,15 @@
   "name": "finances",
   "version": "0.2.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "nuxt dev",
-    "build": "nuxt prepare && prisma generate && nuxt build",
-    "start": "node .output/server/index.mjs",
-    "lint": "npx @biomejs/biome check . && npx vue-tsc --noEmit",
+    "sync": "svelte-kit sync",
+    "postinstall": "prisma generate && svelte-kit sync",
+    "dev": "vite dev --port 3000",
+    "build": "prisma generate && vite build",
+    "preview": "vite preview",
+    "start": "node build",
+    "lint": "npx @biomejs/biome check .",
     "format": "npx @biomejs/biome check --write ."
   },
   "dependencies": {
@@ -15,21 +19,24 @@
     "@prisma/adapter-libsql": "^7.4.1",
     "@prisma/client": "^7.4.1",
     "bcryptjs": "^3.0.3",
+    "clsx": "^2.1.1",
     "echarts": "^6.0.0",
-    "nuxt": "^4.3.1",
-    "nuxt-auth-utils": "^0.5.29",
     "resend": "^6.9.2",
-    "vue": "^3.5.28",
-    "vue-echarts": "^8.0.1"
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.4",
+    "@sveltejs/adapter-node": "^5.5.3",
+    "@sveltejs/kit": "^2.53.2",
+    "@sveltejs/vite-plugin-svelte": "^6.2.4",
     "@tailwindcss/vite": "^4.2.1",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^25.3.0",
     "prisma": "^7.4.1",
+    "svelte": "^5.53.5",
+    "svelte-check": "^4.4.3",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
-    "vue-tsc": "^3.2.5"
+    "vite": "^7.3.1"
   }
 }

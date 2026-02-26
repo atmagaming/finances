@@ -1,6 +1,6 @@
 node_modules/
-.nuxt/
-.output/
+.svelte-kit/
+build/
 .env
 .env.local
 bun.lockb
@@ -11,4 +11,3 @@ prisma/dev.db-journal
 generated/
 .playwright-mcp/
 .vscode/
-.next/
