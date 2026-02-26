@@ -34,7 +34,6 @@ export const POST: RequestHandler = async (event) => {
 
   const superAdminEmails = getSuperAdminEmails();
   const isSuperAdmin = superAdminEmails.includes(email);
-  const isAdmin = isSuperAdmin || user.isAdmin;
 
   let personId: string | null = null;
   try {
@@ -50,8 +49,11 @@ export const POST: RequestHandler = async (event) => {
     name: user.name ?? null,
     image: user.image ?? null,
     personId,
-    isAdmin,
     isSuperAdmin,
+    canViewTransactions: isSuperAdmin || user.canViewTransactions,
+    canViewRevenueShares: isSuperAdmin || user.canViewRevenueShares,
+    canViewPersonalData: isSuperAdmin || user.canViewPersonalData,
+    canEditPeople: isSuperAdmin || user.canEditPeople,
   };
 
   locals.user = sessionUser;

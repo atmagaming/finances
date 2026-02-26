@@ -2,7 +2,7 @@ import type { RequestHandler } from "./$types";
 import { getCachedPeople, getCachedTransactions } from "$lib/server/data";
 
 export const GET: RequestHandler = async ({ locals }) => {
-  const isAdmin = locals.user?.isAdmin ?? false;
+  const canViewTransactions = locals.user?.canViewTransactions ?? false;
   const isAuthenticated = !!locals.user;
   const userEmail = locals.user?.email ?? "";
 
@@ -13,7 +13,7 @@ export const GET: RequestHandler = async ({ locals }) => {
   const personEmailMap = new Map(people.map((p) => [p.id, p.email]));
   const personIdsInTransactions = new Set(transactions.filter((t) => t.personId).map((t) => t.personId as string));
 
-  if (isAdmin) {
+  if (canViewTransactions) {
     const myPersonIds = people
       .filter((p) => p.email === userEmail && personIdsInTransactions.has(p.id))
       .map((p) => p.id);

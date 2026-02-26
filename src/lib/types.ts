@@ -35,6 +35,8 @@ export interface PersonRole {
 export interface Person {
   id: string;
   name: string;
+  nickname: string;
+  image: string;
   identification: string;
   weeklySchedule: string;
   hourlyRatePaid: number;
@@ -42,6 +44,9 @@ export interface Person {
   email: string;
   notionPersonPageId: string;
   telegramAccount: string;
+  discord: string;
+  linkedin: string;
+  description: string;
   statusChanges: PersonStatusChange[];
   documents: PersonDocument[];
   roles: PersonRole[];
@@ -103,6 +108,9 @@ export interface SessionUser {
   name: string | null;
   image: string | null;
   personId: string | null;
-  isAdmin: boolean;
   isSuperAdmin: boolean;
+  canViewTransactions: boolean;
+  canViewRevenueShares: boolean;
+  canViewPersonalData: boolean;
+  canEditPeople: boolean;
 }

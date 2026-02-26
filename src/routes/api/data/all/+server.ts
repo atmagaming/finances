@@ -23,7 +23,7 @@ function anonymize(record: Record<string, number>, myName: string | null): Recor
 
 export const GET: RequestHandler = async ({ locals }) => {
   const currentPersonId = locals.user?.personId ?? null;
-  const isAdmin = locals.user?.isAdmin ?? false;
+  const canViewRevenueShares = locals.user?.canViewRevenueShares ?? false;
   const isAuthenticated = !!locals.user;
 
   const { transactions, sensitiveData, people } = await getAllData();
@@ -43,10 +43,10 @@ export const GET: RequestHandler = async ({ locals }) => {
   const investmentTimeline = calculateInvestmentTimeline(transactions, sensitiveData, personNames, RELEASE_MONTH);
 
   const currentUserName = currentPersonId ? (personNames.get(currentPersonId) ?? null) : null;
-  const displayRevenueShares = isAdmin
+  const displayRevenueShares = canViewRevenueShares
     ? revenueShares
     : revenueShares.map((rs) => ({ ...rs, shares: anonymize(rs.shares, currentUserName) }));
-  const displayInvestmentTimeline = isAdmin
+  const displayInvestmentTimeline = canViewRevenueShares
     ? investmentTimeline
     : investmentTimeline.map((ip) => ({ ...ip, values: anonymize(ip.values, currentUserName) }));
 
@@ -112,7 +112,7 @@ export const GET: RequestHandler = async ({ locals }) => {
       investmentTimeline: displayInvestmentTimeline,
       teamRows: rows,
       currentPersonId,
-      isAdmin,
+      canViewRevenueShares,
       isAuthenticated,
       teamCount: personIds.length,
     }),

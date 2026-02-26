@@ -8,8 +8,9 @@
   export let user: SessionUser | null = null;
 
   const links = [
-    { href: "/", label: "Overview" },
+    { href: "/finances", label: "Overview" },
     { href: "/transactions", label: "Transactions" },
+    { href: "/hr", label: "People" },
   ];
 
   $: navLinks = user?.isSuperAdmin ? [...links, { href: "/admin", label: "Admin" }] : links;
@@ -25,7 +26,7 @@
 
 <nav class="sticky top-0 z-50 border-b border-border bg-card shadow-sm">
   <div class="mx-auto flex max-w-7xl items-center gap-8 px-4 py-3 sm:px-6 lg:px-8">
-    <a href="/" class="text-lg font-bold tracking-tight text-primary">Atma Finances</a>
+    <a href="/finances" class="text-lg font-bold tracking-tight text-primary">Atma Dashboard</a>
     <div class="flex flex-1 gap-1">
       {#each navLinks as link}
         <a

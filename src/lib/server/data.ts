@@ -19,6 +19,10 @@ async function cached<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
   return data;
 }
 
+export function invalidateCache(key: string) {
+  cache.delete(key);
+}
+
 function countMondaysInMonth(year: number, month: number): number {
   let count = 0;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -35,6 +39,8 @@ async function fetchPeople(): Promise<Person[]> {
   return records.map((r) => ({
     id: r.id,
     name: r.name,
+    nickname: r.nickname,
+    image: r.image,
     identification: r.identification,
     weeklySchedule: r.weeklySchedule,
     hourlyRatePaid: r.hourlyRatePaid,
@@ -42,6 +48,9 @@ async function fetchPeople(): Promise<Person[]> {
     email: r.email,
     notionPersonPageId: r.notionPersonPageId,
     telegramAccount: r.telegramAccount,
+    discord: r.discord,
+    linkedin: r.linkedin,
+    description: r.description,
     statusChanges: r.statusChanges.map((sc) => ({ id: sc.id, date: sc.date, status: sc.status })),
     documents: r.documents.map((d) => ({ id: d.id, name: d.name, url: d.url })),
     roles: r.roles.map((role) => ({ id: role.id, name: role.name, notionId: role.notionId })),
@@ -65,6 +74,14 @@ async function fetchTransactions(): Promise<Transaction[]> {
   }));
 }
 
+const ACTIVE_STATUSES = new Set(["working", "vacation", "sick_leave"]);
+
+export function isPersonActive(person: Person): boolean {
+  const sorted = person.statusChanges.toSorted((a, b) => a.date.localeCompare(b.date));
+  const latest = sorted.at(-1);
+  return latest !== undefined && ACTIVE_STATUSES.has(latest.status);
+}
+
 export function deriveSensitiveData(people: Person[]): SensitiveData[] {
   const now = new Date();
   const mondays = countMondaysInMonth(now.getFullYear(), now.getMonth());
@@ -75,9 +92,10 @@ export function deriveSensitiveData(people: Person[]): SensitiveData[] {
 
     const sorted = person.statusChanges.toSorted((a, b) => a.date.localeCompare(b.date));
     const workingChange = sorted.find((c) => c.status === "working");
-    const terminatedChange = sorted.findLast((c) => c.status === "terminated");
+    const inactiveChange = sorted.findLast((c) => c.status === "inactive");
     const latest = sorted.at(-1);
-    const status = !latest || latest.status === "terminated" ? "Inactive" : "Active";
+    const active = latest !== undefined && ACTIVE_STATUSES.has(latest.status);
+    const status = active ? "Active" : "Inactive";
 
     const monthlyPaid = hoursPerWeek * person.hourlyRatePaid * mondays;
     const monthlyInvested = hoursPerWeek * person.hourlyRateAccrued * mondays;
@@ -94,7 +112,7 @@ export function deriveSensitiveData(people: Person[]): SensitiveData[] {
       monthlyInvested,
       monthlyTotal: monthlyPaid + monthlyInvested,
       startDate: workingChange?.date ?? null,
-      endDate: terminatedChange?.date ?? null,
+      endDate: inactiveChange?.date ?? null,
       status,
     };
   });

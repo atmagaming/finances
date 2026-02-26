@@ -18,7 +18,7 @@
 
   export let rows: TableRowData[] = [];
   export let currentPersonId: string | null = null;
-  export let isAdmin = false;
+  export let isAdmin = false; // true when user has canViewRevenueShares
   export let isAuthenticated = false;
   export let teamCount = 0;
 

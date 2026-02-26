@@ -16,7 +16,6 @@ export const GET: RequestHandler = async (event) => {
   const code = url.searchParams.get("code");
   const redirectUri = `${publicEnv.PUBLIC_AUTH_URL ?? "http://localhost:3000"}/auth/google`;
 
-  // If no code, initiate OAuth flow
   if (!code) {
     const clientId = env.GOOGLE_CLIENT_ID;
     if (!clientId) return new Response("Google OAuth not configured", { status: 500 });
@@ -40,7 +39,6 @@ export const GET: RequestHandler = async (event) => {
     return new Response(null, { status: 302, headers: { location: authUrl.toString() } });
   }
 
-  // Handle callback
   const state = url.searchParams.get("state");
   const storedState = cookies.get("oauth_state");
   const verifier = cookies.get("oauth_verifier");
@@ -95,8 +93,10 @@ export const GET: RequestHandler = async (event) => {
   const superAdminEmails = getSuperAdminEmails();
   const isSuperAdmin = superAdminEmails.includes(email);
 
-  const dbUser = await prisma.user.findUnique({ where: { email }, select: { isAdmin: true, id: true } });
-  const isAdmin = isSuperAdmin || (dbUser?.isAdmin ?? false);
+  const dbUser = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, canViewTransactions: true, canViewRevenueShares: true, canViewPersonalData: true, canEditPeople: true },
+  });
 
   let personId: string | null = null;
   try {
@@ -112,8 +112,11 @@ export const GET: RequestHandler = async (event) => {
     name,
     image,
     personId,
-    isAdmin,
     isSuperAdmin,
+    canViewTransactions: isSuperAdmin || (dbUser?.canViewTransactions ?? false),
+    canViewRevenueShares: isSuperAdmin || (dbUser?.canViewRevenueShares ?? false),
+    canViewPersonalData: isSuperAdmin || (dbUser?.canViewPersonalData ?? false),
+    canEditPeople: isSuperAdmin || (dbUser?.canEditPeople ?? false),
   });
 
   return new Response(null, { status: 302, headers: { location: "/" } });

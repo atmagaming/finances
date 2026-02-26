@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: atma-dashboard
+    runtime: node
+    plan: starter
+    buildCommand: "npm install -g bun && bun install && bun run build"
+    startCommand: "bun run start"
+    healthCheckPath: /finances
+    domains:
+      - dashboard.atmagaming.com
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PUBLIC_AUTH_URL
+        value: https://dashboard.atmagaming.com
+      - key: SESSION_SECRET
+        sync: false
+      - key: SUPER_ADMIN_EMAILS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: NOTION_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
