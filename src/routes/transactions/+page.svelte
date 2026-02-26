@@ -7,7 +7,10 @@
 
 {#if payload}
   <div class="space-y-6">
-    <h1 class="text-2xl font-bold">Transactions</h1>
+    <div>
+      <h1 class="text-2xl font-bold text-foreground">Transactions</h1>
+      <p class="mt-1 text-sm text-muted-foreground">Browse and filter all recorded transactions.</p>
+    </div>
     <TransactionsTable
       transactions={payload.transactions}
       highlightPayeeIds={payload.highlightPayeeIds}

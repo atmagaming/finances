@@ -1,7 +1,8 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import Button from "$lib/components/ui/button.svelte";
-  import Input from "$lib/components/ui/input.svelte";
+  import { Button } from "$lib/components/ui/button/index.js";
+  import { Input } from "$lib/components/ui/input/index.js";
+  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "$lib/components/ui/card/index.js";
 
   $: token = $page.url.searchParams.get("token") ?? "";
   let password = "";
@@ -26,8 +27,8 @@
         body: JSON.stringify({ token, password }),
       });
       if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        error = payload?.message ?? "Something went wrong. Please try again.";
+        const responsePayload = await res.json().catch(() => ({}));
+        error = responsePayload?.message ?? "Something went wrong. Please try again.";
         return;
       }
       success = true;
@@ -37,30 +38,34 @@
   }
 </script>
 
-<div class="flex min-h-screen items-center justify-center">
+<div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-background to-purple-50/30 px-4">
   {#if !token}
-    <div class="text-(--text-muted)">Invalid reset link.</div>
+    <p class="text-muted-foreground">Invalid reset link.</p>
   {:else if success}
-    <div class="w-full max-w-sm space-y-4 rounded-xl border border-(--border) bg-(--bg-card) p-8 text-center">
-      <p class="text-sm text-green-500">Password reset successfully.</p>
-      <a href="/login" class="text-sm text-(--accent) hover:underline">Back to sign in</a>
-    </div>
+    <Card class="w-full max-w-sm text-center shadow-lg">
+      <CardContent class="space-y-3 pt-6">
+        <p class="text-sm text-green-600 font-medium">Password reset successfully.</p>
+        <a href="/login" class="text-sm text-primary hover:underline">Back to sign in</a>
+      </CardContent>
+    </Card>
   {:else}
-    <div class="w-full max-w-sm space-y-6 rounded-xl border border-(--border) bg-(--bg-card) p-8">
-      <div class="space-y-1">
-        <h1 class="text-xl font-bold text-(--accent)">Atma Finances</h1>
-        <p class="text-sm text-(--text-muted)">Set new password</p>
-      </div>
+    <Card class="w-full max-w-sm shadow-lg">
+      <CardHeader class="pb-2">
+        <a href="/" class="mb-1 text-xl font-bold text-primary">Atma Finances</a>
+        <CardTitle class="text-lg">Set New Password</CardTitle>
+        <CardDescription>Choose a strong password for your account.</CardDescription>
+      </CardHeader>
+      <CardContent class="space-y-4">
+        {#if error}
+          <p class="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">{error}</p>
+        {/if}
 
-      {#if error}
-        <p class="text-sm text-red-500">{error}</p>
-      {/if}
-
-      <form class="space-y-4" on:submit|preventDefault={handleSubmit}>
-        <Input bind:value={password} type="password" placeholder="New password" required minlength="8" />
-        <Input bind:value={confirmPassword} type="password" placeholder="Confirm password" required minlength="8" />
-        <Button type="submit" className="w-full" disabled={loading}>{loading ? "..." : "Reset Password"}</Button>
-      </form>
-    </div>
+        <form class="space-y-3" on:submit|preventDefault={handleSubmit}>
+          <Input bind:value={password} type="password" placeholder="New password" required minlength={8} />
+          <Input bind:value={confirmPassword} type="password" placeholder="Confirm password" required minlength={8} />
+          <Button type="submit" class="w-full" disabled={loading}>{loading ? "Please wait..." : "Reset Password"}</Button>
+        </form>
+      </CardContent>
+    </Card>
   {/if}
 </div>

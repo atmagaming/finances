@@ -15,14 +15,18 @@
   },
   "dependencies": {
     "@interactive-inc/notion-client": "^1.6.0",
+    "@lucide/svelte": "^0.575.0",
     "@notionhq/client": "^5.9.0",
     "@prisma/adapter-libsql": "^7.4.1",
     "@prisma/client": "^7.4.1",
     "bcryptjs": "^3.0.3",
+    "bits-ui": "^2.16.2",
     "clsx": "^2.1.1",
     "echarts": "^6.0.0",
     "resend": "^6.9.2",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "tailwind-variants": "^3.2.2",
+    "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.4",

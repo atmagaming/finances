@@ -144,8 +144,8 @@
     return {
       tooltip: {
         trigger: "axis",
-        backgroundColor: resolveCssVar("var(--bg-card)"),
-        borderColor: resolveCssVar("var(--border)"),
+        backgroundColor: "#ffffff",
+        borderColor: resolveCssVar("var(--border-legacy)"),
         textStyle: { fontSize: 12 },
         formatter(params: Array<{ seriesName: string; value: number | null; color: string; axisValueLabel: string }>) {
           const first = params[0];
@@ -205,7 +205,7 @@
   });
 </script>
 
-<div class="rounded-xl bg-(--bg-card) p-6" style="box-shadow: var(--shadow)">
+<div class="rounded-xl border border-border bg-card p-6 shadow-sm">
   <div class="mb-4 flex items-center justify-between">
     <h2 class="text-lg font-semibold">{title}</h2>
     <slot name="actions" />
