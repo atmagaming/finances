@@ -1,16 +1,5 @@
-import type { Payee, Person, SensitiveData, Transaction, TransactionMethod, Vacation } from "$lib/types";
-import {
-  findAll,
-  formulaNum,
-  formulaStr,
-  peopleEmail,
-  payeesTable,
-  peopleTable,
-  sensitiveDataTable,
-  transactionsTable,
-  vacationsTable,
-  relationIds,
-} from "$lib/server/notion-tables";
+import type { Person, SensitiveData, Transaction, TransactionMethod } from "$lib/types";
+import { prisma } from "$lib/server/prisma";
 
 const CACHE_TTL = 300_000; // 5 minutes in ms
 
@@ -30,94 +19,83 @@ async function cached<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
   return data;
 }
 
+function countMondaysInMonth(year: number, month: number): number {
+  let count = 0;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  for (let day = 1; day <= daysInMonth; day++) {
+    if (new Date(year, month, day).getDay() === 1) count++;
+  }
+  return count;
+}
+
 async function fetchPeople(): Promise<Person[]> {
-  const records = await findAll(peopleTable);
-  return records.map((record) => {
-    const props = record.properties();
-    return {
-      id: record.id,
-      name: props.Name ?? "",
-      status: formulaStr(props.Status),
-      sensitiveDataIds: relationIds(props["Sensitive Data"]),
-      notionEmail: peopleEmail(props["Notion Person"]),
-    };
+  const records = await prisma.person.findMany({
+    include: { statusChanges: true, documents: true, roles: true },
   });
-}
-
-async function fetchSensitiveData(): Promise<SensitiveData[]> {
-  const records = await findAll(sensitiveDataTable);
-  return records.map((record) => {
-    const props = record.properties();
-    const scheduleStr = props["Schedule (hours)"] ?? "";
-    const schedule = scheduleStr ? scheduleStr.split(",").map((s) => Number(s.trim()) || 0) : [];
-    return {
-      id: record.id,
-      name: props.Name ?? "",
-      personId: relationIds(props.Person)[0] ?? "",
-      hourlyPaid: props["Hourly Paid"] ?? 0,
-      hourlyInvested: props["Hourly Accrued"] ?? 0,
-      schedule,
-      hoursPerWeek: schedule.reduce((a, b) => a + b, 0),
-      monthlyPaid: formulaNum(props["Monthly Paid"]),
-      monthlyInvested: formulaNum(props["Monthly Accrued"]),
-      monthlyTotal: formulaNum(props["Monthly Total"]),
-      startDate: props["Start Date"]?.start ?? null,
-      endDate: props["End Date"]?.start ?? null,
-      status: formulaStr(props.Status),
-    };
-  });
-}
-
-async function fetchPayees(): Promise<Payee[]> {
-  const records = await findAll(payeesTable);
-  return records.map((record) => {
-    const props = record.properties();
-    return {
-      id: record.id,
-      name: props.Name ?? "",
-      personId: relationIds(props.Person)[0] ?? null,
-      type: formulaStr(props.Type),
-      accrued: formulaNum(props.Accrued),
-      invested: formulaNum(props.Invested),
-    };
-  });
+  return records.map((r) => ({
+    id: r.id,
+    name: r.name,
+    identification: r.identification,
+    weeklySchedule: r.weeklySchedule,
+    hourlyRatePaid: r.hourlyRatePaid,
+    hourlyRateAccrued: r.hourlyRateAccrued,
+    email: r.email,
+    notionPersonPageId: r.notionPersonPageId,
+    telegramAccount: r.telegramAccount,
+    statusChanges: r.statusChanges.map((sc) => ({ id: sc.id, date: sc.date, status: sc.status })),
+    documents: r.documents.map((d) => ({ id: d.id, name: d.name, url: d.url })),
+    roles: r.roles.map((role) => ({ id: role.id, name: role.name, notionId: role.notionId })),
+  }));
 }
 
 async function fetchTransactions(): Promise<Transaction[]> {
-  const records = await findAll(transactionsTable);
-  const payees = await getCachedPayees();
-  const payeeMap = new Map(payees.map((p) => [p.id, p]));
-
-  return records.map((record) => {
-    const props = record.properties();
-    const payeeId = relationIds(props["From / To"])[0] ?? "";
-    const payee = payeeMap.get(payeeId);
-    return {
-      id: record.id,
-      note: props.Note ?? "",
-      amount: props.Amount ?? 0,
-      usdEquivalent: formulaNum(props["USD Equivalent"]),
-      currency: props.Currency ?? "",
-      method: formulaStr(props.Method) as TransactionMethod,
-      category: props.Category ?? "",
-      logicalDate: props["Logical Date"]?.start ?? "",
-      factualDate: props["Factual Date"]?.start ?? null,
-      payeeId,
-      payeeName: payee?.name ?? "Unknown",
-    };
-  });
+  const records = await prisma.transaction.findMany();
+  return records.map((r) => ({
+    id: r.id,
+    note: r.note,
+    amount: r.amount,
+    usdEquivalent: r.usdEquivalent,
+    currency: r.currency,
+    method: r.method as TransactionMethod,
+    category: r.category,
+    logicalDate: r.logicalDate,
+    factualDate: r.factualDate ?? null,
+    personId: r.personId ?? null,
+    payeeName: r.payeeName,
+  }));
 }
 
-async function fetchVacations(): Promise<Vacation[]> {
-  const records = await findAll(vacationsTable);
-  return records.map((record) => {
-    const props = record.properties();
+export function deriveSensitiveData(people: Person[]): SensitiveData[] {
+  const now = new Date();
+  const mondays = countMondaysInMonth(now.getFullYear(), now.getMonth());
+
+  return people.map((person) => {
+    const schedule = person.weeklySchedule.split(",").map((s) => Number(s.trim()) || 0);
+    const hoursPerWeek = schedule.reduce((a, b) => a + b, 0);
+
+    const sorted = person.statusChanges.toSorted((a, b) => a.date.localeCompare(b.date));
+    const workingChange = sorted.find((c) => c.status === "working");
+    const terminatedChange = sorted.findLast((c) => c.status === "terminated");
+    const latest = sorted.at(-1);
+    const status = !latest || latest.status === "terminated" ? "Inactive" : "Active";
+
+    const monthlyPaid = hoursPerWeek * person.hourlyRatePaid * mondays;
+    const monthlyInvested = hoursPerWeek * person.hourlyRateAccrued * mondays;
+
     return {
-      id: record.id,
-      personId: relationIds(props.Person)[0] ?? "",
-      type: props.Type ?? "",
-      startDate: props.Dates?.start ?? "",
-      endDate: props.Dates?.end ?? null,
+      id: person.id,
+      name: person.name,
+      personId: person.id,
+      hourlyPaid: person.hourlyRatePaid,
+      hourlyInvested: person.hourlyRateAccrued,
+      schedule,
+      hoursPerWeek,
+      monthlyPaid,
+      monthlyInvested,
+      monthlyTotal: monthlyPaid + monthlyInvested,
+      startDate: workingChange?.date ?? null,
+      endDate: terminatedChange?.date ?? null,
+      status,
     };
   });
 }
@@ -125,34 +103,18 @@ async function fetchVacations(): Promise<Vacation[]> {
 export function getCachedPeople() {
   return cached("people", fetchPeople);
 }
-export function getCachedSensitiveData() {
-  return cached("sensitive-data", fetchSensitiveData);
-}
-export function getCachedPayees() {
-  return cached("payees", fetchPayees);
-}
 export function getCachedTransactions() {
   return cached("transactions", fetchTransactions);
-}
-export function getCachedVacations() {
-  return cached("vacations", fetchVacations);
 }
 
 export interface AllData {
   people: Person[];
   sensitiveData: SensitiveData[];
   transactions: Transaction[];
-  payees: Payee[];
-  vacations: Vacation[];
 }
 
 export async function getAllData(): Promise<AllData> {
-  const [people, sensitiveData, transactions, payees, vacations] = await Promise.all([
-    getCachedPeople(),
-    getCachedSensitiveData(),
-    getCachedTransactions(),
-    getCachedPayees(),
-    getCachedVacations(),
-  ]);
-  return { people, sensitiveData, transactions, payees, vacations };
+  const [people, transactions] = await Promise.all([getCachedPeople(), getCachedTransactions()]);
+  const sensitiveData = deriveSensitiveData(people);
+  return { people, sensitiveData, transactions };
 }

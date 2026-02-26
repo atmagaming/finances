@@ -30,3 +30,67 @@ model PasswordResetToken {
 
   user User @relation(fields: [userId], references: [id])
 }
+
+model Person {
+  id                 String  @id @default(cuid())
+  name               String
+  identification     String  @default("")
+  weeklySchedule     String  @default("4,4,4,4,4,0,0")
+  hourlyRatePaid     Float   @default(0)
+  hourlyRateAccrued  Float   @default(0)
+  email              String  @default("")
+  notionPersonPageId String  @default("")
+  telegramAccount    String  @default("")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  statusChanges PersonStatusChange[]
+  transactions  Transaction[]
+  roles         PersonRole[]
+  documents     PersonDocument[]
+}
+
+model PersonStatusChange {
+  id       String @id @default(cuid())
+  personId String
+  date     String
+  status   String
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}
+
+model PersonDocument {
+  id       String @id @default(cuid())
+  personId String
+  name     String
+  url      String @default("")
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}
+
+model PersonRole {
+  id       String @id @default(cuid())
+  personId String
+  name     String
+  notionId String @default("")
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id            String  @id @default(cuid())
+  factualDate   String?
+  logicalDate   String
+  amount        Float
+  currency      String  @default("USD")
+  usdEquivalent Float   @default(0)
+  note          String  @default("")
+  category      String  @default("")
+  method        String  @default("Paid")
+  personId      String?
+  payeeName     String  @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  person Person? @relation(fields: [personId], references: [id])
+}

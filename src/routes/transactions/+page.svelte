@@ -10,8 +10,8 @@
     <h1 class="text-2xl font-bold">Transactions</h1>
     <TransactionsTable
       transactions={payload.transactions}
-      highlightPayeeIds={payload.highlightPayeeIds}
-      maskedPayeeIds={payload.maskedPayeeIds}
+      highlightPersonIds={payload.highlightPersonIds}
+      maskedPersonIds={payload.maskedPersonIds}
     />
   </div>
 {/if}

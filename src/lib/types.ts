@@ -10,16 +10,41 @@ export interface Transaction {
   category: string;
   logicalDate: string;
   factualDate: string | null;
-  payeeId: string;
+  personId: string | null;
   payeeName: string;
+}
+
+export interface PersonStatusChange {
+  id: string;
+  date: string;
+  status: string;
+}
+
+export interface PersonDocument {
+  id: string;
+  name: string;
+  url: string;
+}
+
+export interface PersonRole {
+  id: string;
+  name: string;
+  notionId: string;
 }
 
 export interface Person {
   id: string;
   name: string;
-  status: string;
-  sensitiveDataIds: string[];
-  notionEmail: string;
+  identification: string;
+  weeklySchedule: string;
+  hourlyRatePaid: number;
+  hourlyRateAccrued: number;
+  email: string;
+  notionPersonPageId: string;
+  telegramAccount: string;
+  statusChanges: PersonStatusChange[];
+  documents: PersonDocument[];
+  roles: PersonRole[];
 }
 
 export interface SensitiveData {
@@ -36,23 +61,6 @@ export interface SensitiveData {
   startDate: string | null;
   endDate: string | null;
   status: string;
-}
-
-export interface Payee {
-  id: string;
-  name: string;
-  personId: string | null;
-  type: string;
-  accrued: number;
-  invested: number;
-}
-
-export interface Vacation {
-  id: string;
-  personId: string;
-  type: string;
-  startDate: string;
-  endDate: string | null;
 }
 
 export interface MonthlyExpense {

@@ -10,16 +10,16 @@
   import Badge from "$lib/components/ui/badge.svelte";
 
   export let transactions: Transaction[] = [];
-  export let highlightPayeeIds: string[] = [];
-  export let maskedPayeeIds: string[] = [];
+  export let highlightPersonIds: string[] = [];
+  export let maskedPersonIds: string[] = [];
 
   let methodFilter = "all";
   let categoryFilter = "all";
   let tooltip: { x: number; y: number } | null = null;
   let tooltipTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  $: highlightSet = new Set(highlightPayeeIds);
-  $: maskedSet = new Set(maskedPayeeIds);
+  $: highlightSet = new Set(highlightPersonIds);
+  $: maskedSet = new Set(maskedPersonIds);
 
   $: categories = [...new Set(transactions.map((t) => t.category).filter(Boolean))].sort();
   const methods = ["Paid", "Accrued", "Invested"];
@@ -85,9 +85,9 @@
       {#each filtered as tx (tx.id)}
         <TableRow
           className={
-            highlightSet.has(tx.payeeId)
+            highlightSet.has(tx.personId)
               ? "bg-(--accent-light)"
-              : maskedSet.has(tx.payeeId)
+              : maskedSet.has(tx.personId)
                 ? "bg-(--bg-card-hover)"
                 : ""
           }
@@ -95,15 +95,15 @@
           <TableCell className="whitespace-nowrap px-3 py-2.5 text-sm">{formatDate(tx.logicalDate)}</TableCell>
           <TableCell
             className={`max-w-xs truncate px-3 py-2.5 text-sm ${
-              maskedSet.has(tx.payeeId) ? "text-(--text-muted)" : ""
+              maskedSet.has(tx.personId) ? "text-(--text-muted)" : ""
             }`}
           >
             {tx.note}
           </TableCell>
-          <TableCell className={`px-3 py-2.5 text-sm ${maskedSet.has(tx.payeeId) ? "text-(--text-muted)" : ""}`}>
+          <TableCell className={`px-3 py-2.5 text-sm ${maskedSet.has(tx.personId) ? "text-(--text-muted)" : ""}`}>
             {tx.payeeName}
           </TableCell>
-          <TableCell className={`px-3 py-2.5 text-sm ${maskedSet.has(tx.payeeId) ? "text-(--text-muted)" : ""}`}>
+          <TableCell className={`px-3 py-2.5 text-sm ${maskedSet.has(tx.personId) ? "text-(--text-muted)" : ""}`}>
             {tx.category}
           </TableCell>
           <TableCell className="px-3 py-2.5 text-sm">
@@ -117,16 +117,16 @@
           </TableCell>
           <TableCell
             className={`whitespace-nowrap px-3 py-2.5 text-sm font-mono ${
-              maskedSet.has(tx.payeeId)
+              maskedSet.has(tx.personId)
                 ? "cursor-help text-(--text-muted)"
                 : tx.usdEquivalent > 0
                   ? "text-(--green)"
                   : "text-(--red)"
             }`}
-            on:mouseenter={maskedSet.has(tx.payeeId) ? showTooltip : undefined}
-            on:mouseleave={maskedSet.has(tx.payeeId) ? hideTooltip : undefined}
+            on:mouseenter={maskedSet.has(tx.personId) ? showTooltip : undefined}
+            on:mouseleave={maskedSet.has(tx.personId) ? hideTooltip : undefined}
           >
-            {#if maskedSet.has(tx.payeeId)}
+            {#if maskedSet.has(tx.personId)}
               <img src="/question.png" alt="Hidden" width="16" height="16" class="inline opacity-40" />
             {:else}
               ${Math.abs(tx.usdEquivalent).toLocaleString()}

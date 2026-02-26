@@ -39,7 +39,7 @@ export const POST: RequestHandler = async (event) => {
   let personId: string | null = null;
   try {
     const people = await getCachedPeople();
-    personId = people.find((p) => p.notionEmail === email)?.id ?? null;
+    personId = people.find((p) => p.email === email)?.id ?? null;
   } catch (e) {
     console.error("Failed to resolve personId:", e);
   }
