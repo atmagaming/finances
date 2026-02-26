@@ -26,7 +26,7 @@ export const GET: RequestHandler = async ({ locals }) => {
   const isAdmin = locals.user?.isAdmin ?? false;
   const isAuthenticated = !!locals.user;
 
-  const { transactions, sensitiveData, payees, people } = await getAllData();
+  const { transactions, sensitiveData, people } = await getAllData();
 
   const monthlyExpenses = aggregateExpensesByMonth(transactions);
   const projections = projectExpenses(sensitiveData, RELEASE_MONTH);
@@ -36,22 +36,11 @@ export const GET: RequestHandler = async ({ locals }) => {
   const monthlyAccrued = Math.round(activeSensitiveData.reduce((s, sd) => s + sd.monthlyInvested, 0));
   const monthlyTotal = monthlyPaid + monthlyAccrued;
 
-  const payeePersonMap = new Map<string, string>();
-  for (const payee of payees) {
-    if (payee.personId) payeePersonMap.set(payee.id, payee.personId);
-  }
-
   const personNames = new Map<string, string>();
   for (const person of people) personNames.set(person.id, person.name);
 
-  const revenueShares = calculateRevenueShares(transactions, sensitiveData, payeePersonMap, personNames, RELEASE_MONTH);
-  const investmentTimeline = calculateInvestmentTimeline(
-    transactions,
-    sensitiveData,
-    payeePersonMap,
-    personNames,
-    RELEASE_MONTH,
-  );
+  const revenueShares = calculateRevenueShares(transactions, sensitiveData, personNames, RELEASE_MONTH);
+  const investmentTimeline = calculateInvestmentTimeline(transactions, sensitiveData, personNames, RELEASE_MONTH);
 
   const currentUserName = currentPersonId ? (personNames.get(currentPersonId) ?? null) : null;
   const displayRevenueShares = isAdmin
@@ -62,10 +51,11 @@ export const GET: RequestHandler = async ({ locals }) => {
     : investmentTimeline.map((ip) => ({ ...ip, values: anonymize(ip.values, currentUserName) }));
 
   const investmentByPerson = new Map<string, number>();
-  for (const payee of payees) {
-    if (!payee.personId) continue;
-    const current = investmentByPerson.get(payee.personId) ?? 0;
-    investmentByPerson.set(payee.personId, current + payee.accrued + payee.invested);
+  for (const tx of transactions) {
+    if (!tx.personId) continue;
+    if (tx.method !== "Accrued" && !(tx.method === "Invested" && tx.amount > 0)) continue;
+    const current = investmentByPerson.get(tx.personId) ?? 0;
+    investmentByPerson.set(tx.personId, current + Math.abs(tx.usdEquivalent));
   }
 
   const currentShareEntry = revenueShares.length > 0 ? revenueShares[revenueShares.length - 1] : null;
@@ -85,9 +75,9 @@ export const GET: RequestHandler = async ({ locals }) => {
         ? personSd.reduce((s, sd) => s + sd.hoursPerWeek * sd.hourlyInvested, 0) / hoursPerWeek
         : 0;
 
-    const monthlyPaid = personSd.reduce((s, sd) => s + sd.monthlyPaid, 0);
-    const monthlyAccrued = personSd.reduce((s, sd) => s + sd.monthlyInvested, 0);
-    const monthlyTotal = personSd.reduce((s, sd) => s + sd.monthlyTotal, 0);
+    const monthlyPaidPerson = personSd.reduce((s, sd) => s + sd.monthlyPaid, 0);
+    const monthlyAccruedPerson = personSd.reduce((s, sd) => s + sd.monthlyInvested, 0);
+    const monthlyTotalPerson = personSd.reduce((s, sd) => s + sd.monthlyTotal, 0);
 
     const currentInvestment = investmentByPerson.get(personId) ?? 0;
     const currentShare = currentShareEntry?.shares[name] ?? 0;
@@ -99,9 +89,9 @@ export const GET: RequestHandler = async ({ locals }) => {
       hoursPerWeek,
       paidRate,
       investedRate,
-      monthlyPaid,
-      monthlyAccrued,
-      monthlyTotal,
+      monthlyPaid: monthlyPaidPerson,
+      monthlyAccrued: monthlyAccruedPerson,
+      monthlyTotal: monthlyTotalPerson,
       currentInvestment,
       currentShare,
       projectedShare,

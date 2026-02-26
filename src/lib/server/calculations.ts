@@ -87,7 +87,6 @@ export function projectExpenses(sensitiveData: SensitiveData[], endMonth: string
 export function calculateRevenueShares(
   transactions: Transaction[],
   sensitiveData: SensitiveData[],
-  payeePersonMap: Map<string, string>,
   personNames: Map<string, string>,
   endMonth: string,
 ): RevenueShare[] {
@@ -108,7 +107,7 @@ export function calculateRevenueShares(
   for (const tx of transactions) {
     if (!tx.logicalDate) continue;
     const month = tx.logicalDate.slice(0, 7);
-    const personId = payeePersonMap.get(tx.payeeId);
+    const personId = tx.personId;
     if (!personId) continue;
 
     if (tx.method === "Accrued") {
@@ -174,7 +173,6 @@ export function calculateRevenueShares(
 export function calculateInvestmentTimeline(
   transactions: Transaction[],
   sensitiveData: SensitiveData[],
-  payeePersonMap: Map<string, string>,
   personNames: Map<string, string>,
   endMonth: string,
 ): InvestmentPoint[] {
@@ -194,7 +192,7 @@ export function calculateInvestmentTimeline(
   for (const tx of transactions) {
     if (!tx.logicalDate) continue;
     const month = tx.logicalDate.slice(0, 7);
-    const personId = payeePersonMap.get(tx.payeeId);
+    const personId = tx.personId;
     if (!personId) continue;
 
     if (tx.method === "Accrued") {

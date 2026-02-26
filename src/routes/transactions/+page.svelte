@@ -13,8 +13,8 @@
     </div>
     <TransactionsTable
       transactions={payload.transactions}
-      highlightPayeeIds={payload.highlightPayeeIds}
-      maskedPayeeIds={payload.maskedPayeeIds}
+      highlightPersonIds={payload.highlightPersonIds}
+      maskedPersonIds={payload.maskedPersonIds}
     />
   </div>
 {/if}
